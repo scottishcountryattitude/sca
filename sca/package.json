@@ -1,0 +1,8 @@
+{
+  "name": "scottish-country-attitude",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": { "test": "node --test tests/shop.test.mjs" },
+  "dependencies": { "@netlify/blobs": ">=8.0.0" }
+}
