@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scottish Country Attitude</title>
+<meta name="theme-color" content="#17231d">
+<meta name="description" content="Scottish country quotes, pets and gift sets, made to order.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Country Attitude">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="bar">
+    <div class="brand" onclick="showPage('home')">
+      <svg viewBox="0 0 40 40" fill="none"><path d="M20 4c-1.5 5-4 7-8 9 3 1 5 3 6 6-4 0-7 2-9 5 4 1 6 3 7 6 3-3 5-4 8-4s5 1 8 4c1-3 3-5 7-6-2-3-5-5-9-5 1-3 3-5 6-6-4-2-6.5-4-8-9-1 1.5-2 2.5-4 2.5s-3-1-4-2.5z" fill="#efe7d8"/></svg>
+      <span class="name">Scottish Country <em>Attitude</em></span>
+    </div>
+    <button class="cart-btn" onclick="openCart()">Cart
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button data-page="home" class="active" onclick="showPage('home')">Home</button>
+    <button data-page="quotes" onclick="showPage('quotes')">Country Quotes</button>
+    <button data-page="borncollection" onclick="showPage('borncollection')">Born Here Live Here Ride Here</button>
+    <button data-page="pets" onclick="showPage('pets')">Scottish Pets Wae Country Attitude</button>
+    <button data-page="dailyquotes" onclick="showPage('dailyquotes')">Daily Quotes</button>
+    <button data-page="studio" onclick="showPage('studio')">Design Your Own</button>
+    <button data-page="reviews" onclick="showPage('reviews')">Reviews</button>
+  </nav>
+  <div id="adminBar">
+    <div class="admin-inner">
+      <span>ADMIN MODE</span>
+      <span class="admin-btns">
+        <button type="button" id="editPricesBtn" onclick="openPricePanel()">Edit item prices</button>
+        <button type="button" id="editGiftsBtn" onclick="openGiftEditor()">Edit gift sets</button>
+        <button type="button" onclick="adminLogin()">Log out</button>
+      </span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- HOME -->
+  <section class="page active" id="page-home">
+    <div class="hero tartan">
+      <div class="hero-inner">
+        <h1>Born here.<br>Live here.<br>Ride here.</h1>
+        <p>Sassy country attitude, stitched into every piece. Tartan-hearted apparel, made to order, printed when you order it — nothing sits on a shelf.</p>
+        <div class="actions">
+          <a class="btn primary" onclick="showPage('quotes')">Shop Country Quotes</a>
+          <a class="btn ghost" onclick="showPage('studio')">Design your own</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <div>
+        <h2>Where to start</h2>
+        <p>Every collection prints on the same range: tees, caps, cowboy hats, hooded jumpers, bags and mugs.</p>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card" onclick="showPage('quotes')" style="cursor:pointer">
+        <div class="swatch img" id="card-quotes"><span class="tag">Collection</span></div>
+        <div class="card-body"><h3>Country Quotes</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">Sayings that mean something round here.</p></div>
+      </div>
+      <div class="card" onclick="showPage('borncollection')" style="cursor:pointer">
+        <div class="swatch img" id="card-born"><span class="tag">Collection</span></div>
+        <div class="card-body"><h3>Born Here Live Here Ride Here</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">The house line. Flag-backed, proud.</p></div>
+      </div>
+      <div class="card" onclick="showPage('pets')" style="cursor:pointer">
+        <div class="swatch img" id="card-pets"><span class="tag">Collection</span></div>
+        <div class="card-body"><h3>Sassy Country Pets</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">New designs added often.</p></div>
+      </div>
+      <div class="card" onclick="showPage('dailyquotes')" style="cursor:pointer">
+        <div class="swatch img" id="card-gift"><span class="tag">Coming soon</span></div>
+        <div class="card-body"><h3>Daily Quotes</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">Coming soon.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COUNTRY QUOTES -->
+  <section class="page" id="page-quotes">
+    <div class="banner-img" id="hero-quotes"></div>
+    <div class="section-head">
+      <div><h2>Country Quote Designs</h2><p>Pick a saying, pick your product, pick your size.</p></div>
+    </div>
+    <div class="admin-strip">
+      <span>Admin — add a new quote design whenever you like</span>
+      <label class="add-btn" style="cursor:pointer;">
+        Upload design
+        <input type="file" accept="image/*" style="display:none" onchange="addDesign('quotes', event)">
+      </label>
+    </div>
+    <div class="giftset giftbox" id="giftBox-quotes"></div>
+    <div class="grid" id="quotesGrid"></div>
+  </section>
+
+  <!-- BORN HERE LIVE HERE RIDE HERE -->
+  <section class="page" id="page-borncollection">
+    <div class="banner-img" id="hero-born"></div>
+    <div class="section-head"><div><h2>Shop the collection</h2><p>Every piece backed with the flag. This is the everyday range.</p></div></div>
+    <div class="admin-strip">
+      <span>Admin — add a new design whenever you like</span>
+      <label class="add-btn" style="cursor:pointer;">
+        Upload design
+        <input type="file" accept="image/*" style="display:none" onchange="addDesign('born', event)">
+      </label>
+    </div>
+    <div class="giftset giftbox" id="giftBox-born"></div>
+    <div class="grid" id="bornGrid"></div>
+  </section>
+
+  <!-- PETS -->
+  <section class="page" id="page-pets">
+    <div class="banner-img" id="hero-pets"></div>
+    <div class="section-head">
+      <div><h2>Scottish Pets Wae Country Attitude</h2><p>Sassy designs for the four-legged members of the family.</p></div>
+    </div>
+    <div class="admin-strip">
+      <span>Admin — add a new pet design whenever you like</span>
+      <label class="add-btn" style="cursor:pointer;">
+        Upload design
+        <input type="file" accept="image/*" style="display:none" onchange="addDesign('pets', event)">
+      </label>
+    </div>
+    <div class="giftset giftbox" id="giftBox-pets"></div>
+    <div class="grid" id="petsGrid"></div>
+
+    <div class="section-head" style="margin-top:40px;">
+      <div><h2>Bags</h2><p>Pop one of the pet designs above onto a bag, or upload your own image — a small custom charge applies for your own image.</p></div>
+    </div>
+    <div class="grid" id="petsBagGrid"></div>
+  </section>
+
+  <!-- DAILY QUOTES -->
+  <section class="page" id="page-dailyquotes">
+    <div class="section-head" style="margin-top:26px;">
+      <div><h2>Daily Quotes</h2><p>Coming soon.</p></div>
+    </div>
+  </section>
+
+  <!-- STUDIO -->
+  <section class="page" id="page-studio">
+    <div class="section-head">
+      <div><h2>Design Your Own</h2><p>Upload your design, pick a product, see it mocked up before you pay — this is one flow, not two separate pages.</p></div>
+    </div>
+    <div class="studio">
+      <div class="studio-panel">
+        <h3>1. Your design</h3>
+        <div class="field">
+          <label>Upload image</label>
+          <div class="upload-drop" onclick="document.getElementById('studioUpload').click()" id="dropText">
+            Tap to choose an image from your phone or computer
+          </div>
+          <input type="file" id="studioUpload" accept="image/*" style="display:none" onchange="handleStudioUpload(event)">
+        </div>
+        <h3 style="margin-top:22px;">2. Your product</h3>
+        <div class="field">
+          <label>Product</label>
+          <select id="studioProduct" onchange="renderMockStage();updateStudioFields()">
+            <option value="tee">T-shirt — imaged £${prices.teeImaged.toFixed(2)}</option>
+            <option value="cap">Cap — £${prices.cap.toFixed(2)}</option>
+            <option value="cowboy">Cowboy hat</option>
+            <option value="hoodie">Hooded jumper — imaged £${prices.hoodieImaged.toFixed(2)}</option>
+            <option value="bag">Bag</option>
+            <option value="mug">Mug — from £${prices.mugSmall.toFixed(2)}</option>
+          </select>
+        </div>
+        <div class="field" id="studioSizeField">
+          <label>Size</label>
+          <select id="studioSize">
+            <option>Small</option><option selected>Medium</option><option>Large</option><option>X-Large</option><option>2X-Large</option>
+          </select>
+        </div>
+        <div class="field" id="studioLogoField" style="display:none;">
+          <label style="font-size:0.82rem;"><input type="checkbox" id="studioLogo"> Add our company logo (as well as your design)</label>
+        </div>
+        <div id="studioPriceLine" style="font-size:0.9rem;font-weight:700;margin:8px 0;"></div>
+        <button class="add-btn" style="width:100%;padding:12px;" onclick="addStudioToCart()">Add to cart</button>
+      </div>
+      <div class="studio-panel">
+        <h3>Mock-up preview</h3>
+        <div class="mock-stage" id="mockStage"></div>
+        <p style="font-size:0.78rem;color:rgba(23,35,29,0.5);margin-top:10px;">This is exactly what prints — check placement before you pay.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section class="page" id="page-reviews">
+    <div class="section-head">
+      <div><h2>Customer Reviews</h2><p>Bought something from us? Tell us how the buying experience was and what you thought of your order once it arrived.</p></div>
+    </div>
+    <div class="rev-layout">
+      <div class="studio-panel rev-form">
+        <h3>Leave a review</h3>
+        <div class="field">
+          <label for="revName">Your name</label>
+          <input type="text" id="revName" maxlength="40" placeholder="e.g. Fiona M.">
+        </div>
+        <div class="field">
+          <label for="revProduct">What did you buy?</label>
+          <select id="revProduct">
+            <option value="">Select…</option>
+            <option>T-shirt</option><option>Hoodie</option><option>Tote bag</option>
+            <option>Cap</option><option>Mug</option><option>Gift set</option><option>Custom design</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>How was buying from us? (website, checkout, delivery)</label>
+          <div class="star-input" id="starsExperience" data-value="0"></div>
+        </div>
+        <div class="field">
+          <label>How do you like the product now it's arrived?</label>
+          <div class="star-input" id="starsProduct" data-value="0"></div>
+        </div>
+        <div class="field">
+          <label for="revText">Your review</label>
+          <input type="text" id="revWebsite" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
+          <textarea id="revText" maxlength="800" placeholder="Print quality, fit, delivery time, anything you'd tell a friend…"></textarea>
+        </div>
+        <button class="add-btn" style="width:100%;padding:12px;" onclick="submitReview()">Post review</button>
+        <div class="rev-msg" id="revMsg"></div>
+      </div>
+      <div>
+        <div class="rev-summary" id="revSummary"></div>
+        <div id="revList"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Scottish Country Attitude — made to order, printed after payment clears. <a href="#" id="adminLink" onclick="adminLogin();return false;">Admin</a></footer>
+
+<!-- CART DRAWER -->
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h3>Your cart</h3>
+    <button class="drawer-close" onclick="closeCart()">&times;</button>
+  </div>
+  <div class="drawer-items" id="drawerItems"></div>
+  <div class="drawer-foot">
+    <div class="pp-note" id="ppNote">Free postage on orders of £80 or more</div>
+    <div class="total"><span>Total</span><span id="cartTotal">£0.00</span></div>
+    <button class="checkout-btn" onclick="buyNow()">Buy it now</button>
+    <button class="cancel-btn" onclick="closeCart()">Cancel</button>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal" id="payModal">
+  <div class="modal-card">
+    <h3 id="payTitle">Thank you!</h3>
+    <p id="payText"></p>
+    <button class="btn primary" onclick="document.getElementById('payModal').classList.remove('open')">Close</button>
+  </div>
+</div>
+
+<div class="modal" id="priceModal">
+  <div class="modal-card">
+    <h3>Edit item prices</h3>
+    <p>These are the fixed prices used throughout the site (product pages and gift sets). Changes are saved to the shop and show for every customer straight away.</p>
+    <div style="display:grid;grid-template-columns:1fr 90px;gap:10px 12px;align-items:center;margin:14px 0;">
+      <label for="priceMugSmall">Mug — Standard 11oz (£)</label>
+      <input type="number" step="0.01" id="priceMugSmall" style="padding:8px;border:1px solid var(--line);border-radius:4px;">
+      <label for="priceMugLarge">Mug — Large 15oz (£)</label>
+      <input type="number" step="0.01" id="priceMugLarge" style="padding:8px;border:1px solid var(--line);border-radius:4px;">
+      <label for="priceCap">Cap (£)</label>
+      <input type="number" step="0.01" id="priceCap" style="padding:8px;border:1px solid var(--line);border-radius:4px;">
+      <label for="priceTeePlain">T-Shirt — plain (£)</label>
+      <input type="number" step="0.01" id="priceTeePlain" style="padding:8px;border:1px solid var(--line);border-radius:4px;">
+      <label for="priceTeeImaged">T-Shirt — imaged (£)</label>
+      <input type="number" step="0.01" id="priceTeeImaged" style="padding:8px;border:1px solid var(--line);border-radius:4px;">
+      <label for="priceHoodiePlain">Hoodie — plain (£)</label>
+      <input type="number" step="0.01" id="priceHoodiePlain" style="padding:8px;border:1px solid var(--line);border-radius:4px;">
+      <label for="priceHoodieImaged">Hoodie — imaged (£)</label>
+      <input type="number" step="0.01" id="priceHoodieImaged" style="padding:8px;border:1px solid var(--line);border-radius:4px;">
+    </div>
+    <button class="btn primary" onclick="savePricePanel()">Save prices</button>
+    <button class="cancel-btn" onclick="closePricePanel()">Cancel</button>
+  </div>
+</div>
+
+<div class="modal" id="giftModal">
+  <div class="modal-card tall">
+    <h3>Edit gift sets</h3>
+    <p>These are the combinations customers can pick from in the "Gift sets" box on the Country Quotes, Born Here and Pets pages. Remove one you don't want, or tick items to add a new one, then press Save.</p>
+    <div id="giftEditorBody"></div>
+    <button class="btn primary" onclick="saveGiftEditor()">Save gift sets</button>
+    <button class="cancel-btn" onclick="closeGiftEditor()">Cancel</button>
+    <button class="cancel-btn" onclick="resetGiftEditor()">Reset to the standard list</button>
+  </div>
+</div>
+
+<div class="modal" id="previewModal">
+  <div class="modal-card">
+    <h3>Your order</h3>
+    <div id="previewBody"></div>
+    <button class="btn primary" onclick="closeOrderPreview()">View basket</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<div id="installBar" hidden>
+  <span id="installText">Install this app on your phone</span>
+  <button id="installBtn" type="button">Install</button>
+  <button id="installClose" type="button" aria-label="Dismiss">&times;</button>
+</div>
+<script src="pwa.js"></script>
+
+</body>
+</html>
