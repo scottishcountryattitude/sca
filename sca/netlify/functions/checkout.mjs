@@ -1,4 +1,4 @@
-import { shopStore, getCatalog, getPrices, priceLine, postageFor, json } from "../lib/shop.mjs";
+import { shopStore, getCatalog, getPrices, getGiftSets, priceLine, postageFor, json } from "../lib/shop.mjs";
 
 // Receives what is in the basket, works out the prices itself, and creates a Stripe Checkout page.
 export default async (req) => {
@@ -11,12 +11,12 @@ export default async (req) => {
   if (!items.length || items.length > 30) return json({ error: "Your basket is empty or too large." }, 400);
 
   const store = shopStore();
-  const [prices, catalog] = await Promise.all([getPrices(store), getCatalog(store)]);
+  const [prices, catalog, giftSets] = await Promise.all([getPrices(store), getCatalog(store), getGiftSets(store)]);
   const origin = new URL(req.url).origin;
 
   let lines;
   try {
-    lines = items.map((spec) => priceLine(spec, { prices, catalog }));
+    lines = items.map((spec) => priceLine(spec, { prices, catalog, giftSets }));
   } catch (e) {
     return json({ error: e.userFacing ? e.message : "Something in your basket could not be checked." }, 400);
   }

@@ -26,7 +26,6 @@
       <svg viewBox="0 0 40 40" fill="none"><path d="M20 4c-1.5 5-4 7-8 9 3 1 5 3 6 6-4 0-7 2-9 5 4 1 6 3 7 6 3-3 5-4 8-4s5 1 8 4c1-3 3-5 7-6-2-3-5-5-9-5 1-3 3-5 6-6-4-2-6.5-4-8-9-1 1.5-2 2.5-4 2.5s-3-1-4-2.5z" fill="#efe7d8"/></svg>
       <span class="name">Scottish Country <em>Attitude</em></span>
     </div>
-    <button class="cart-btn" style="background:none;color:var(--ink);border:1px solid var(--line);margin-right:8px;" id="editPricesBtn" onclick="openPricePanel()">Edit item prices</button>
     <button class="cart-btn" onclick="openCart()">Cart
       <span class="cart-count" id="cartCount">0</span>
     </button>
@@ -36,10 +35,20 @@
     <button data-page="quotes" onclick="showPage('quotes')">Country Quotes</button>
     <button data-page="borncollection" onclick="showPage('borncollection')">Born Here Live Here Ride Here</button>
     <button data-page="pets" onclick="showPage('pets')">Scottish Pets Wae Country Attitude</button>
-    <button data-page="giftsets" onclick="showPage('giftsets')">Gift Sets</button>
+    <button data-page="dailyquotes" onclick="showPage('dailyquotes')">Daily Quotes</button>
     <button data-page="studio" onclick="showPage('studio')">Design Your Own</button>
     <button data-page="reviews" onclick="showPage('reviews')">Reviews</button>
   </nav>
+  <div id="adminBar">
+    <div class="admin-inner">
+      <span>ADMIN MODE</span>
+      <span class="admin-btns">
+        <button type="button" id="editPricesBtn" onclick="openPricePanel()">Edit item prices</button>
+        <button type="button" id="editGiftsBtn" onclick="openGiftEditor()">Edit gift sets</button>
+        <button type="button" onclick="adminLogin()">Log out</button>
+      </span>
+    </div>
+  </div>
 </header>
 
 <main>
@@ -76,9 +85,9 @@
         <div class="swatch img" id="card-pets"><span class="tag">Collection</span></div>
         <div class="card-body"><h3>Sassy Country Pets</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">New designs added often.</p></div>
       </div>
-      <div class="card" onclick="showPage('giftsets')" style="cursor:pointer">
-        <div class="swatch img" id="card-gift"><span class="tag">Bundle</span></div>
-        <div class="card-body"><h3>Gift Sets</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">Mix and match, save on a bundle.</p></div>
+      <div class="card" onclick="showPage('dailyquotes')" style="cursor:pointer">
+        <div class="swatch img" id="card-gift"><span class="tag">Coming soon</span></div>
+        <div class="card-body"><h3>Daily Quotes</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">Coming soon.</p></div>
       </div>
     </div>
   </section>
@@ -96,6 +105,7 @@
         <input type="file" accept="image/*" style="display:none" onchange="addDesign('quotes', event)">
       </label>
     </div>
+    <div class="giftset giftbox" id="giftBox-quotes"></div>
     <div class="grid" id="quotesGrid"></div>
   </section>
 
@@ -110,6 +120,7 @@
         <input type="file" accept="image/*" style="display:none" onchange="addDesign('born', event)">
       </label>
     </div>
+    <div class="giftset giftbox" id="giftBox-born"></div>
     <div class="grid" id="bornGrid"></div>
   </section>
 
@@ -126,6 +137,7 @@
         <input type="file" accept="image/*" style="display:none" onchange="addDesign('pets', event)">
       </label>
     </div>
+    <div class="giftset giftbox" id="giftBox-pets"></div>
     <div class="grid" id="petsGrid"></div>
 
     <div class="section-head" style="margin-top:40px;">
@@ -134,15 +146,11 @@
     <div class="grid" id="petsBagGrid"></div>
   </section>
 
-  <!-- GIFT SETS -->
-  <section class="page" id="page-giftsets">
-    <div style="display:flex; gap:20px; align-items:center; margin-top:26px; flex-wrap:wrap;">
-      <div id="gift-emblem" style="width:120px; height:120px; border-radius:3px; border:1px solid var(--line); flex-shrink:0;"></div>
-      <div class="section-head" style="margin:0;">
-        <div><h2>Gift Sets</h2><p>Bundle pricing on paired pieces, all in the same design.</p></div>
-      </div>
+  <!-- DAILY QUOTES -->
+  <section class="page" id="page-dailyquotes">
+    <div class="section-head" style="margin-top:26px;">
+      <div><h2>Daily Quotes</h2><p>Coming soon.</p></div>
     </div>
-    <div class="grid" id="giftGrid" style="margin-top:20px;"></div>
   </section>
 
   <!-- STUDIO -->
@@ -286,6 +294,17 @@
     </div>
     <button class="btn primary" onclick="savePricePanel()">Save prices</button>
     <button class="cancel-btn" onclick="closePricePanel()">Cancel</button>
+  </div>
+</div>
+
+<div class="modal" id="giftModal">
+  <div class="modal-card tall">
+    <h3>Edit gift sets</h3>
+    <p>These are the combinations customers can pick from in the "Gift sets" box on the Country Quotes, Born Here and Pets pages. Remove one you don't want, or tick items to add a new one, then press Save.</p>
+    <div id="giftEditorBody"></div>
+    <button class="btn primary" onclick="saveGiftEditor()">Save gift sets</button>
+    <button class="cancel-btn" onclick="closeGiftEditor()">Cancel</button>
+    <button class="cancel-btn" onclick="resetGiftEditor()">Reset to the standard list</button>
   </div>
 </div>
 

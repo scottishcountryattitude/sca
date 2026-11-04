@@ -13,6 +13,8 @@ THE RULES BUILT IN
     FREE when the order total is GBP 80.00 or more.
     (Change these at the top of netlify/lib/shop.mjs, and the matching preview numbers
      near "POSTAGE_STANDARD" in public/app.js.)
+  - Gift sets: a "Gift sets" box on the Country Quotes, Born Here and Pets pages (2, 3, 4 or 5 items). A bag in a
+    set is the standard bag price (GBP 15.99). The Daily Quotes page is a "coming soon" placeholder for now.
   - Prices are decided on the server. A customer cannot change a price in their browser.
   - Designs, prices and reviews are saved on the server, so every customer sees the same shop.
   - Only you can add/remove designs, change prices or remove reviews (admin password).
@@ -40,6 +42,10 @@ USING IT
   - Email for each payment: Stripe Dashboard > Settings > Personal details > Communication preferences
     (turn on email for "Successful payments"). Switch Stripe to live mode and replace the key with the
     live key (sk_live_...) only when you are happy with the test orders.
+
+  - Gift set combinations: in Admin mode tap "Edit gift sets" to remove a combination or tick items to add one,
+    then Save. "Reset to the standard list" puts the original list back. (The standard list lives in
+    netlify/lib/shop.mjs and the matching list in public/app.js - tests/shop.test.mjs checks they agree.)
 
 WHEN YOU CHANGE ANY FILE IN public/
   Edit sw.js and change VERSION ('sca-v2' -> 'sca-v3') so installed apps update.

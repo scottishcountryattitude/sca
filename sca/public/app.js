@@ -375,113 +375,244 @@ function addDesign(collectionKey, evt){
 }
 
 
-/* ---------------- gift sets ---------------- */
-const giftSets = [
-  {name:'Mug + Cap', pieces:['mug','cap']},
-  {name:'Cap + T-shirt', pieces:['cap','tee']},
-  {name:'Mug + T-shirt', pieces:['mug','tee']},
-  {name:'Cap + Mug + T-shirt', pieces:['cap','mug','tee']},
-  {name:'Mug + Hoodie', pieces:['mug','hoodie']},
-  {name:'Cap + Hoodie', pieces:['cap','hoodie']},
-  {name:'Mug + Cap + T-Shirt + Hoodie', pieces:['mug','cap','tee','hoodie']},
-  {name:'Cap + Mug + Hoodie', pieces:['cap','mug','hoodie']},
+/* ---------------- gift sets ----------------
+   A "Gift sets" box sits on each of the three design pages. The customer picks how many pieces (2 to 5),
+   then a combination, then one of THAT page's designs, then the size / colour for each piece.
+   The standard list below must match the server (tests/shop.test.mjs checks it). The owner can change the
+   list from Admin > "Edit gift sets"; the changed list comes from the server in applyShop(). */
+const GIFT_PAGES = ['quotes','born','pets'];
+const GIFT_ORDER = ['mug','bag','cap','tee','hoodie'];
+const giftPieceLabel = p => ({mug:'Mug', bag:'Bag', cap:'Cap', tee:'T-Shirt', hoodie:'Hoodie'})[p];
+const giftNameLabel = p => ({mug:'Mug', bag:'Bag', cap:'Cap', tee:'T-shirt', hoodie:'Hoodie'})[p];
+function giftSetName(pieces){
+  const n = GIFT_ORDER.filter(p=>pieces.includes(p)).map(giftNameLabel);
+  return n.length < 2 ? n.join('') : n.slice(0,-1).join(', ') + ' + ' + n[n.length-1];
+}
+const defaultGiftSets = [
+  {id:'2-1', pieces:['mug','cap']},
+  {id:'2-2', pieces:['mug','bag']},
+  {id:'2-3', pieces:['mug','tee']},
+  {id:'2-4', pieces:['mug','hoodie']},
+  {id:'2-5', pieces:['bag','tee']},
+  {id:'2-6', pieces:['bag','cap']},
+  {id:'2-7', pieces:['bag','hoodie']},
+  {id:'2-8', pieces:['cap','tee']},
+  {id:'2-9', pieces:['cap','hoodie']},
+  {id:'3-1', pieces:['mug','bag','tee']},
+  {id:'3-2', pieces:['mug','bag','cap']},
+  {id:'3-3', pieces:['mug','bag','hoodie']},
+  {id:'3-4', pieces:['bag','cap','tee']},
+  {id:'3-5', pieces:['bag','cap','hoodie']},
+  {id:'4-1', pieces:['mug','bag','cap','hoodie']},
+  {id:'4-2', pieces:['mug','bag','cap','tee']},
+  {id:'5-1', pieces:['mug','bag','cap','tee','hoodie']},
 ];
-let giftState = {};
-const giftPieceLabel = p => ({mug:'Mug', cap:'Cap', tee:'T-Shirt', hoodie:'Hoodie'})[p];
+let giftSets = defaultGiftSets.map(g=>({id:g.id, pieces:g.pieces.slice()}));
+/* what each page's box is currently showing: {count, setId, design, pieces:{mug:{...}, ...}} */
+const giftUI = {quotes:{}, born:{}, pets:{}};
+const GIFT_COUNT_LABELS = {2:'2 item gift set', 3:'3 item gift set', 4:'4 item gift set', 5:'5 item gift set (full set)'};
 
-function giftPiecePrice(setIdx, piece){
-  const st = (giftState[setIdx] && giftState[setIdx][piece]) || {};
+function currentGiftSet(key){
+  const ui = giftUI[key];
+  return giftSets.find(g=>g.id===ui.setId) || null;
+}
+function giftPiecePrice(key, piece){
+  const st = (giftUI[key].pieces && giftUI[key].pieces[piece]) || {};
   if(piece==='mug') return st.size ? mugPrices[st.size] : 0;
+  if(piece==='bag') return BAG_BASE_PRICE;
   if(piece==='cap') return prices.cap;
   if(piece==='tee' || piece==='hoodie') return st.style ? prices[piece + (st.style==='plain'?'Plain':'Imaged')] : 0;
   return 0;
 }
-function giftSetTotal(setIdx){
-  return giftSets[setIdx].pieces.reduce((s,p)=>s+giftPiecePrice(setIdx,p),0);
+function giftSetTotal(key){
+  const g = currentGiftSet(key);
+  return g ? g.pieces.reduce((s,p)=>s+giftPiecePrice(key,p),0) : 0;
 }
-function giftPieceComplete(setIdx, piece){
-  const st = (giftState[setIdx] && giftState[setIdx][piece]) || {};
+function giftPieceComplete(key, piece){
+  const st = (giftUI[key].pieces && giftUI[key].pieces[piece]) || {};
+  if(piece==='bag') return true;
   if(piece==='mug') return !!st.size;
   if(piece==='cap') return !!st.color;
   if(piece==='tee' || piece==='hoodie') return !!st.style && !!st.size && !!st.color;
   return false;
 }
-function giftSetField(setIdx, piece, field, value){
-  giftState[setIdx][piece][field] = value;
-  renderOneGiftSet(setIdx);
+function giftChooseCount(key, value){
+  giftUI[key] = {count: value ? Number(value) : 0, setId:'', design: giftUI[key].design || '', pieces:{}};
+  renderGiftBox(key);
 }
-function renderGiftPieceFields(setIdx, piece){
-  const st = giftState[setIdx][piece] || (giftState[setIdx][piece] = {});
+function giftChooseSet(key, id){
+  const ui = giftUI[key];
+  ui.setId = id; ui.pieces = {};
+  renderGiftBox(key);
+}
+function giftChooseDesign(key, id){
+  giftUI[key].design = id;
+  renderGiftBox(key);
+}
+function giftSetField(key, piece, field, value){
+  const ui = giftUI[key];
+  if(!ui.pieces[piece]) ui.pieces[piece] = {};
+  ui.pieces[piece][field] = value;
+  renderGiftBox(key);
+}
+function renderGiftPieceFields(key, piece){
+  const st = giftUI[key].pieces[piece] || (giftUI[key].pieces[piece] = {});
   let html = `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--line);"><strong style="font-size:0.8rem;">${giftPieceLabel(piece)}</strong>`;
   if(piece==='mug'){
-    html += `<select onchange="giftSetField(${setIdx},'mug','size',this.value)">
+    html += `<select onchange="giftSetField('${key}','mug','size',this.value)">
       <option value="">Choose size…</option>
       <option value="Standard (11oz)" ${st.size==='Standard (11oz)'?'selected':''}>Standard (11oz) — £${mugPrices['Standard (11oz)'].toFixed(2)}</option>
       <option value="Large (15oz)" ${st.size==='Large (15oz)'?'selected':''}>Large (15oz) — £${mugPrices['Large (15oz)'].toFixed(2)}</option>
     </select>`;
+  } else if(piece==='bag'){
+    html += `<span style="font-size:0.78rem;display:block;margin:6px 0 0;">£${BAG_BASE_PRICE.toFixed(2)}</span>`;
   } else if(piece==='cap'){
     const colorOpts = productColors.map(c=>`<option ${st.color===c?'selected':''}>${c}</option>`).join('');
     html += `<span style="font-size:0.78rem;display:block;margin:6px 0 4px;">£${prices.cap.toFixed(2)}</span>
-      <select onchange="giftSetField(${setIdx},'cap','color',this.value)"><option value="">Choose colour…</option>${colorOpts}</select>`;
+      <select onchange="giftSetField('${key}','cap','color',this.value)"><option value="">Choose colour…</option>${colorOpts}</select>`;
   } else {
     const plainP = prices[piece+'Plain'], imagedP = prices[piece+'Imaged'];
-    html += `<select onchange="giftSetField(${setIdx},'${piece}','style',this.value)">
+    html += `<select onchange="giftSetField('${key}','${piece}','style',this.value)">
       <option value="">Choose style…</option>
       <option value="imaged" ${st.style==='imaged'?'selected':''}>Imaged (with this design) — £${imagedP.toFixed(2)}</option>
       <option value="plain" ${st.style==='plain'?'selected':''}>Plain (no print) — £${plainP.toFixed(2)}</option>
     </select>`;
     if(st.style){
       const colorOpts = productColors.map(c=>`<option ${st.color===c?'selected':''}>${c}</option>`).join('');
-      const sizeOpts = productTypes[piece].sizes.map(s=>`<option ${st.size===s?'selected':''}>${s}</option>`).join('');
+      const sizeOpts = productTypes[piece].sizes.map(sz=>`<option ${st.size===sz?'selected':''}>${sz}</option>`).join('');
       html += `<label style="display:block;font-size:0.76rem;font-weight:600;margin:6px 0 2px;">Colour</label>
-        <select onchange="giftSetField(${setIdx},'${piece}','color',this.value)"><option value="">Choose colour…</option>${colorOpts}</select>
+        <select onchange="giftSetField('${key}','${piece}','color',this.value)"><option value="">Choose colour…</option>${colorOpts}</select>
         <label style="display:block;font-size:0.76rem;font-weight:600;margin:6px 0 2px;">Size</label>
-        <select onchange="giftSetField(${setIdx},'${piece}','size',this.value)"><option value="">Choose size…</option>${sizeOpts}</select>`;
+        <select onchange="giftSetField('${key}','${piece}','size',this.value)"><option value="">Choose size…</option>${sizeOpts}</select>`;
       if(st.style==='plain'){
-        html += `<label style="display:block;font-size:0.76rem;margin-top:6px;"><input type="checkbox" ${st.logo?'checked':''} onchange="giftSetField(${setIdx},'${piece}','logo',this.checked)"> Add our company logo</label>`;
+        html += `<label style="display:block;font-size:0.76rem;margin-top:6px;"><input type="checkbox" ${st.logo?'checked':''} onchange="giftSetField('${key}','${piece}','logo',this.checked)"> Add our company logo</label>`;
       }
     }
   }
   html += `</div>`;
   return html;
 }
-function renderOneGiftSet(setIdx){
-  const g = giftSets[setIdx];
-  const el = document.getElementById('giftCard'+setIdx);
+function renderGiftBox(key){
+  const el = document.getElementById('giftBox-'+key);
   if(!el) return;
-  const total = giftSetTotal(setIdx);
-  const allDone = g.pieces.every(p=>giftPieceComplete(setIdx,p));
-  el.innerHTML = `
-    <h3>${g.name}</h3>
-    <span class="pieces">${g.pieces.map(giftPieceLabel).join(' & ')}</span>
-    <span class="price">£${total.toFixed(2)}</span>
-    <label style="display:block;font-size:0.78rem;font-weight:600;margin:8px 0 4px;">Design</label>
-    <select id="giftDesign${setIdx}">
-      <option>Country Quote design</option>
-      <option>Born Here Live Here Ride Here</option>
-      <option>Scottish Pets design</option>
-    </select>
-    ${g.pieces.map(p=>renderGiftPieceFields(setIdx,p)).join('')}
-    <button class="add-btn" style="width:100%;margin-top:10px;" ${allDone?'':'disabled'} onclick="addGiftSetToCart(${setIdx})">Add set — £${total.toFixed(2)}</button>`;
+  const ui = giftUI[key];
+  /* if the owner has changed the list, drop a choice that no longer exists */
+  if(ui.setId && !giftSets.some(g=>g.id===ui.setId)){ ui.setId = ''; ui.pieces = {}; }
+  const designs = catalogs[key] || [];
+  if(ui.design && !designs.some(d=>d.id===ui.design)) ui.design = '';
+  const counts = [2,3,4,5].filter(n=>giftSets.some(g=>g.pieces.length===n));
+  if(ui.count && !counts.includes(ui.count)){ ui.count = 0; ui.setId = ''; ui.pieces = {}; }
+
+  let html = `<h3>Gift sets</h3>
+    <span class="pieces">Mix and match pieces in one of this page's designs.</span>
+    <select aria-label="Gift sets" onchange="giftChooseCount('${key}',this.value)">
+      <option value="">Gift sets — choose…</option>
+      ${counts.map(n=>`<option value="${n}" ${ui.count===n?'selected':''}>${GIFT_COUNT_LABELS[n]}</option>`).join('')}
+    </select>`;
+  if(ui.count){
+    const options = giftSets.filter(g=>g.pieces.length===ui.count);
+    html += `<select aria-label="Choose a combination" onchange="giftChooseSet('${key}',this.value)">
+      <option value="">Choose a combination…</option>
+      ${options.map(g=>`<option value="${g.id}" ${ui.setId===g.id?'selected':''}>${giftSetName(g.pieces)}</option>`).join('')}
+    </select>`;
+  }
+  const g = currentGiftSet(key);
+  if(g){
+    if(!designs.length){
+      html += `<p class="pieces">No designs on this page yet, so gift sets can't be ordered from here just now.</p>`;
+    } else {
+      const total = giftSetTotal(key);
+      const allDone = !!ui.design && g.pieces.every(p=>giftPieceComplete(key,p));
+      html += `<label style="display:block;font-size:0.78rem;font-weight:600;margin:8px 0 4px;">Design</label>
+        <select aria-label="Design" onchange="giftChooseDesign('${key}',this.value)">
+          <option value="">Choose a design…</option>
+          ${designs.map(d=>`<option value="${d.id}" ${ui.design===d.id?'selected':''}>${escHtml(d.name)}</option>`).join('')}
+        </select>
+        ${g.pieces.map(p=>renderGiftPieceFields(key,p)).join('')}
+        <button class="add-btn" style="width:100%;margin-top:10px;" ${allDone?'':'disabled'} onclick="addGiftSetToCart('${key}')">Add set — £${total.toFixed(2)}</button>`;
+    }
+  }
+  el.innerHTML = html;
 }
-function addGiftSetToCart(setIdx){
-  const g = giftSets[setIdx];
-  const design = document.getElementById('giftDesign'+setIdx).value;
-  const total = giftSetTotal(setIdx);
+function addGiftSetToCart(key){
+  const ui = giftUI[key];
+  const g = currentGiftSet(key);
+  const design = (catalogs[key]||[]).find(d=>d.id===ui.design);
+  if(!g || !design || !g.pieces.every(p=>giftPieceComplete(key,p))) return;
+  const total = giftSetTotal(key);
   const parts = g.pieces.map(p=>{
-    const st = giftState[setIdx][p];
+    const st = ui.pieces[p] || {};
+    if(p==='bag') return 'Bag';
     if(p==='mug') return 'Mug ('+st.size+')';
     if(p==='cap') return 'Cap ('+st.color+')';
     const style = st.style==='plain' ? 'Plain'+(st.logo?' + logo':'') : 'Imaged';
     return giftPieceLabel(p)+' ('+style+', '+st.size+', '+st.color+')';
   }).join(', ');
-  addToCart('g'+setIdx+'-'+Date.now(), g.name+' ('+design+') — '+parts, total, '', {k:'gift', setIdx, design, pieces: JSON.parse(JSON.stringify(giftState[setIdx]))});
-  giftState[setIdx] = {};
-  renderOneGiftSet(setIdx);
+  addToCart('g'+g.id+'-'+Date.now(), giftSetName(g.pieces)+' gift set ('+design.name+') — '+parts, total, '',
+    {k:'gift', setId:g.id, collection:key, designId:design.id, pieces: JSON.parse(JSON.stringify(ui.pieces))}, design.img || null);
+  giftUI[key] = {count: ui.count, setId:'', design: ui.design, pieces:{}};
+  renderGiftBox(key);
 }
 function renderGiftSets(){
-  document.getElementById('giftGrid').innerHTML = giftSets.map((g,i)=>`<div class="giftset" id="giftCard${i}"></div>`).join('');
-  giftSets.forEach((g,i)=>{ giftState[i] = {}; renderOneGiftSet(i); });
+  GIFT_PAGES.forEach(renderGiftBox);
+}
+
+/* ---- admin: edit the list of gift sets ---- */
+let giftDraft = [];
+function openGiftEditor(){
+  giftDraft = giftSets.map(g=>({id:g.id, pieces:g.pieces.slice()}));
+  renderGiftEditor();
+  document.getElementById('giftModal').classList.add('open');
+}
+function closeGiftEditor(){
+  document.getElementById('giftModal').classList.remove('open');
+}
+function renderGiftEditor(){
+  let html = '';
+  [2,3,4,5].forEach(n=>{
+    const rows = giftDraft.map((g,i)=>({g,i})).filter(x=>x.g.pieces.length===n);
+    html += `<div style="margin:12px 0 4px;font-weight:700;font-size:0.85rem;">${GIFT_COUNT_LABELS[n]}</div>`;
+    if(!rows.length) html += `<div style="font-size:0.82rem;opacity:0.6;">None — this size won't show on the site.</div>`;
+    html += rows.map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:0.88rem;">
+      <span>${giftSetName(x.g.pieces)}</span>
+      <button type="button" class="cancel-btn" style="width:auto;padding:6px 10px;" onclick="giftEditorRemove(${x.i})">Remove</button>
+    </div>`).join('');
+  });
+  html += `<div style="margin-top:16px;font-weight:700;font-size:0.85rem;">Add a combination</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0;">
+      ${GIFT_ORDER.map(p=>`<label style="font-size:0.88rem;"><input type="checkbox" class="giftNewPiece" value="${p}"> ${giftPieceLabel(p)}</label>`).join('')}
+    </div>
+    <button type="button" class="btn" onclick="giftEditorAdd()">Add combination</button>
+    <div id="giftEditorMsg" style="font-size:0.82rem;margin-top:6px;min-height:1.2em;"></div>`;
+  document.getElementById('giftEditorBody').innerHTML = html;
+}
+function giftEditorRemove(i){
+  giftDraft.splice(i,1);
+  renderGiftEditor();
+}
+function giftEditorAdd(){
+  const picked = Array.from(document.querySelectorAll('.giftNewPiece')).filter(c=>c.checked).map(c=>c.value);
+  const msg = document.getElementById('giftEditorMsg');
+  if(picked.length < 2){ msg.textContent = 'Tick at least 2 items.'; return; }
+  const pieces = GIFT_ORDER.filter(p=>picked.includes(p));
+  if(giftDraft.some(g=>g.pieces.join('+')===pieces.join('+'))){ msg.textContent = giftSetName(pieces)+' is already in the list.'; return; }
+  giftDraft.push({id:'', pieces});
+  renderGiftEditor();
+}
+async function saveGiftEditor(){
+  try{
+    await adminCall({action:'set-giftsets', giftSets: giftDraft.map(g=>({id:g.id, pieces:g.pieces}))});
+    closeGiftEditor();
+    await loadShop();
+  }catch(e){ alert(e.message || 'Gift sets could not be saved.'); }
+}
+async function resetGiftEditor(){
+  if(!confirm('Put the standard gift set list back? Your changes to the list will be lost.')) return;
+  try{
+    await adminCall({action:'reset-giftsets'});
+    closeGiftEditor();
+    await loadShop();
+  }catch(e){ alert(e.message || 'Gift sets could not be reset.'); }
 }
 
 /* ---------------- studio / mock-up ---------------- */
@@ -597,7 +728,7 @@ function cartPostage(subtotal){
   let items = 0, hoodie = false;
   cart.forEach(i=>{
     const sp = i.spec || {};
-    if(sp.k === 'gift'){ const g = giftSets[sp.setIdx]; items += g ? g.pieces.length : 1; if(g && g.pieces.includes('hoodie')) hoodie = true; }
+    if(sp.k === 'gift'){ const g = giftSets.find(x=>x.id===sp.setId); const ps = g ? g.pieces : Object.keys(sp.pieces||{}); items += ps.length || 1; if(ps.includes('hoodie')) hoodie = true; }
     else { items += 1; if(sp.type === 'hoodie' || sp.product === 'hoodie') hoodie = true; }
   });
   return (hoodie || items >= 3) ? POSTAGE_BULKY : POSTAGE_STANDARD;
@@ -611,7 +742,7 @@ async function postJSON(url, body, headers){
   const res = await fetch(url, {method:'POST', headers: Object.assign({'content-type':'application/json'}, headers||{}), body: JSON.stringify(body)});
   let data = {};
   try{ data = await res.json(); }catch(e){}
-  if(!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+  if(!res.ok) throw new Error(data.error || ('Something went wrong (code ' + res.status + '). Please try again.'));
   return data;
 }
 /* big photos are shrunk before upload so they arrive quickly on mobile data */
@@ -785,12 +916,17 @@ function adminLogin(){
   adminCall({action:'check'}).then(()=>{
     try{ sessionStorage.setItem('sca_admin', pw); }catch(e){}
     setAdminUI(); renderReviews();
-  }).catch(()=>{ ADMIN_KEY = null; alert('That password was not accepted.'); });
+  }).catch(err=>{
+    ADMIN_KEY = null;
+    const m = (err && err.message) || '';
+    alert(m === 'Wrong password' ? 'That password was not accepted. Check capital letters and spaces, then try again.' : m || 'Could not reach the shop server.');
+  });
 }
 function applyShop(data){
   if(!data || !data.catalogs) return;
   ['quotes','born','pets'].forEach(k=>{ catalogs[k] = data.catalogs[k] || []; });
   if(data.prices) Object.assign(prices, data.prices);
+  if(Array.isArray(data.giftSets) && data.giftSets.length) giftSets = data.giftSets;
   mugPrices['Standard (11oz)'] = prices.mugSmall;
   mugPrices['Large (15oz)'] = prices.mugLarge;
   reviews = data.reviews || [];

@@ -1,7 +1,7 @@
 // Shared shop logic: storage helpers, price table, postage rules and basket pricing.
 // Everything that decides what a customer pays lives here, on the server.
 import { getStore } from "@netlify/blobs";
-import { timingSafeEqual } from "node:crypto";
+import { timingSafeEqual, randomBytes } from "node:crypto";
 
 /* ================= EDIT THESE ================= */
 export const POSTAGE = {
@@ -30,17 +30,36 @@ export const DEFAULT_CATALOG = {
 export const MUG_SIZES = ["Standard (11oz)", "Large (15oz)"];
 export const CLOTHING_SIZES = ["Small", "Medium", "Large", "X-Large", "2X-Large"];
 export const COLOURS = ["White", "Grey", "Navy", "Black"];
-export const GIFT_DESIGNS = ["Country Quote design", "Born Here Live Here Ride Here", "Scottish Pets design"];
-// Must match the giftSets list in public/app.js (tests/pricing.test.mjs checks this).
-export const GIFT_SETS = [
-  { name: "Mug + Cap", pieces: ["mug", "cap"] },
-  { name: "Cap + T-shirt", pieces: ["cap", "tee"] },
-  { name: "Mug + T-shirt", pieces: ["mug", "tee"] },
-  { name: "Cap + Mug + T-shirt", pieces: ["cap", "mug", "tee"] },
-  { name: "Mug + Hoodie", pieces: ["mug", "hoodie"] },
-  { name: "Cap + Hoodie", pieces: ["cap", "hoodie"] },
-  { name: "Mug + Cap + T-Shirt + Hoodie", pieces: ["mug", "cap", "tee", "hoodie"] },
-  { name: "Cap + Mug + Hoodie", pieces: ["cap", "mug", "hoodie"] },
+/* ---------- gift sets ----------
+   A gift set is a list of pieces (2 to 5 of: mug, bag, cap, tee, hoodie), all in one design from one page.
+   The list below is the standard list; the owner can change it from Admin > "Edit gift sets"
+   and the changed list is saved on the server. Names are always built from the pieces. */
+export const GIFT_COLLECTIONS = ["quotes", "born", "pets"];
+export const GIFT_PIECES = ["mug", "bag", "cap", "tee", "hoodie"]; // this is also the order names are written in
+const GIFT_NAME_LABEL = { mug: "Mug", bag: "Bag", cap: "Cap", tee: "T-shirt", hoodie: "Hoodie" };
+export function giftSetName(pieces) {
+  const names = GIFT_PIECES.filter((p) => pieces.includes(p)).map((p) => GIFT_NAME_LABEL[p]);
+  return names.length < 2 ? names.join("") : names.slice(0, -1).join(", ") + " + " + names[names.length - 1];
+}
+// Must match defaultGiftSets in public/app.js (tests/shop.test.mjs checks this).
+export const DEFAULT_GIFT_SETS = [
+  { id: "2-1", pieces: ["mug", "cap"] },
+  { id: "2-2", pieces: ["mug", "bag"] },
+  { id: "2-3", pieces: ["mug", "tee"] },
+  { id: "2-4", pieces: ["mug", "hoodie"] },
+  { id: "2-5", pieces: ["bag", "tee"] },
+  { id: "2-6", pieces: ["bag", "cap"] },
+  { id: "2-7", pieces: ["bag", "hoodie"] },
+  { id: "2-8", pieces: ["cap", "tee"] },
+  { id: "2-9", pieces: ["cap", "hoodie"] },
+  { id: "3-1", pieces: ["mug", "bag", "tee"] },
+  { id: "3-2", pieces: ["mug", "bag", "cap"] },
+  { id: "3-3", pieces: ["mug", "bag", "hoodie"] },
+  { id: "3-4", pieces: ["bag", "cap", "tee"] },
+  { id: "3-5", pieces: ["bag", "cap", "hoodie"] },
+  { id: "4-1", pieces: ["mug", "bag", "cap", "hoodie"] },
+  { id: "4-2", pieces: ["mug", "bag", "cap", "tee"] },
+  { id: "5-1", pieces: ["mug", "bag", "cap", "tee", "hoodie"] },
 ];
 const LABEL = { mug: "Mug", cap: "Cap", tee: "T-Shirt", hoodie: "Hoodie" };
 
@@ -54,6 +73,10 @@ export async function getCatalog(store = shopStore()) {
 export async function getPrices(store = shopStore()) {
   const p = await store.get("prices", { type: "json" });
   return { ...DEFAULT_PRICES, ...(p || {}) };
+}
+export async function getGiftSets(store = shopStore()) {
+  const g = await store.get("giftsets", { type: "json" });
+  return Array.isArray(g) && g.length ? g : structuredClone(DEFAULT_GIFT_SETS);
 }
 export async function getReviews(store = shopStore()) {
   return (await store.get("reviews", { type: "json" })) || [];
@@ -85,15 +108,40 @@ export function parseImageDataUrl(dataUrl, maxBytes) {
   return { type: m[1], bytes };
 }
 
+// Stray spaces at either end (easy to add when pasting on a phone) are ignored. Capitals still matter.
+export function adminConfigured() {
+  return String(process.env.ADMIN_PASSWORD || "").trim().length > 0;
+}
 export function isAdmin(req) {
-  const given = Buffer.from(String(req.headers.get("x-admin-key") || ""));
-  const real = Buffer.from(String(process.env.ADMIN_PASSWORD || ""));
+  const given = Buffer.from(String(req.headers.get("x-admin-key") || "").trim());
+  const real = Buffer.from(String(process.env.ADMIN_PASSWORD || "").trim());
   if (!real.length || given.length !== real.length) return false;
   return timingSafeEqual(given, real);
 }
 
 /* ---------- pricing ---------- */
 const bad = (msg) => { const e = new Error(msg); e.userFacing = true; return e; };
+
+// Checks a gift set list sent by the admin page and returns a clean one.
+// Each set needs 2 to 5 different pieces; the same combination can only appear once.
+export function normalizeGiftSets(input) {
+  if (!Array.isArray(input) || input.length > 60) throw bad("Invalid gift set list.");
+  const seenIds = new Set(), seenCombos = new Set(), out = [];
+  for (const g of input) {
+    const pieces = GIFT_PIECES.filter((p) => Array.isArray(g?.pieces) && g.pieces.includes(p));
+    if (!Array.isArray(g?.pieces) || g.pieces.some((p) => !GIFT_PIECES.includes(p)) || new Set(g.pieces).size !== g.pieces.length)
+      throw bad("Each gift set can only use a mug, bag, cap, T-shirt or hoodie, each once.");
+    if (pieces.length < 2 || pieces.length > 5) throw bad("Each gift set needs 2 to 5 pieces.");
+    const combo = pieces.join("+");
+    if (seenCombos.has(combo)) throw bad(`${giftSetName(pieces)} is in the list twice.`);
+    seenCombos.add(combo);
+    let id = /^[a-z0-9-]{1,24}$/.test(String(g.id || "")) ? String(g.id) : "";
+    while (!id || seenIds.has(id)) id = "x" + randomBytes(4).toString("hex");
+    seenIds.add(id);
+    out.push({ id, pieces });
+  }
+  return out;
+}
 
 function clothingPrice(type, style, prices) {
   if (type === "cap") return prices.cap;
@@ -117,7 +165,7 @@ function findDesign(catalog, id) {
 
 // Turns one basket line from the browser into a trusted line: the browser only says WHAT
 // was chosen; the price is always worked out here.
-export function priceLine(spec, { prices, catalog }) {
+export function priceLine(spec, { prices, catalog, giftSets = DEFAULT_GIFT_SETS }) {
   if (!spec || typeof spec !== "object") throw bad("Invalid basket item.");
   const mugPrice = (size) => (size === MUG_SIZES[0] ? prices.mugSmall : prices.mugLarge);
 
@@ -162,13 +210,16 @@ export function priceLine(spec, { prices, catalog }) {
   }
 
   if (spec.k === "gift") {
-    const set = GIFT_SETS[spec.setIdx];
-    if (!set) throw bad("Invalid gift set.");
-    if (!GIFT_DESIGNS.includes(spec.design)) throw bad("Invalid gift set design.");
+    const set = giftSets.find((g) => g.id === String(spec.setId));
+    if (!set) throw bad("Sorry, that gift set is no longer available. Please choose it again.");
+    if (!GIFT_COLLECTIONS.includes(spec.collection)) throw bad("Invalid gift set page.");
+    const design = (catalog[spec.collection] || []).find((p) => p.id === String(spec.designId));
+    if (!design) throw bad("Sorry, the design for that gift set is no longer available.");
     let total = 0; const parts = [];
     for (const piece of set.pieces) {
       const st = (spec.pieces && spec.pieces[piece]) || {};
       if (piece === "mug") { checkSize("mug", st.size); total += mugPrice(st.size); parts.push(`Mug (${st.size})`); }
+      else if (piece === "bag") { total += BAG_BASE_PRICE; parts.push("Bag"); }
       else if (piece === "cap") { checkColour("cap", st.color); total += prices.cap; parts.push(`Cap (${st.color})`); }
       else {
         checkSize(piece, st.size); checkColour(piece, st.color);
@@ -177,7 +228,7 @@ export function priceLine(spec, { prices, catalog }) {
         parts.push(`${LABEL[piece]} (${style}, ${st.size}, ${st.color})`);
       }
     }
-    return { pence: toPence(total), name: `${set.name} gift set (${spec.design})`, description: parts.join(", "), hoodie: set.pieces.includes("hoodie"), pieces: set.pieces.length };
+    return { pence: toPence(total), name: `${giftSetName(set.pieces)} gift set (${design.name})`, description: parts.join(", "), hoodie: set.pieces.includes("hoodie"), pieces: set.pieces.length };
   }
 
   throw bad("Invalid basket item.");

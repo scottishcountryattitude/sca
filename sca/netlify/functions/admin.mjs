@@ -1,10 +1,12 @@
-import { shopStore, getCatalog, getPrices, getReviews, DEFAULT_PRICES, json, cleanText, isAdmin, parseImageDataUrl } from "../lib/shop.mjs";
+import { shopStore, getCatalog, getPrices, getReviews, normalizeGiftSets, DEFAULT_PRICES, json, cleanText, isAdmin, adminConfigured, parseImageDataUrl } from "../lib/shop.mjs";
 import { randomBytes } from "node:crypto";
 
 const COLLECTIONS = ["quotes", "born", "pets"];
 
 export default async (req) => {
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
+  if (!adminConfigured())
+    return json({ error: "The server has no admin password yet. In Netlify, save ADMIN_PASSWORD under Environment variables, then deploy the site again." }, 503);
   if (!isAdmin(req)) { await new Promise((r) => setTimeout(r, 800)); return json({ error: "Wrong password" }, 401); }
   let b; try { b = await req.json(); } catch { return json({ error: "Bad request" }, 400); }
   const store = shopStore();
@@ -43,6 +45,20 @@ export default async (req) => {
       }
     }
     await store.setJSON("prices", next);
+    return json({ ok: true });
+  }
+
+  if (b.action === "set-giftsets") {
+    let list;
+    try { list = normalizeGiftSets(b.giftSets); }
+    catch (e) { return json({ error: e.userFacing ? e.message : "Invalid gift set list." }, 400); }
+    if (!list.length) return json({ error: "Keep at least one gift set (or use Reset to put the standard list back)." }, 400);
+    await store.setJSON("giftsets", list);
+    return json({ ok: true });
+  }
+
+  if (b.action === "reset-giftsets") {
+    await store.delete("giftsets");
     return json({ ok: true });
   }
 
