@@ -101,11 +101,11 @@ export async function rateLimit(store, ip, bucket, limit) {
 }
 
 export function parseImageDataUrl(dataUrl, maxBytes) {
-  const m = /^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
+  const m = /^data:(image\/(?:png|jpe?g|webp|gif|heic|heif));base64,([A-Za-z0-9+/=]+)$/i.exec(String(dataUrl || ""));
   if (!m) return null;
   const bytes = Buffer.from(m[2], "base64");
   if (!bytes.length || bytes.length > maxBytes) return null;
-  return { type: m[1], bytes };
+  return { type: m[1].toLowerCase(), bytes };
 }
 
 // Stray spaces at either end (easy to add when pasting on a phone) are ignored. Capitals still matter.
@@ -236,7 +236,7 @@ export function priceLine(spec, { prices, catalog, giftSets = DEFAULT_GIFT_SETS 
 
 export function postageFor(lines) {
   const subtotal = lines.reduce((s, l) => s + l.pence, 0);
-  const items = lines.reduce((s, l) => s + l.pieces, 0);
+  const items = lines.reduce((s, l) => l.pieces ? s + l.pieces : s + 1, 0);
   const bulky = lines.some((l) => l.hoodie) || items >= 3;
   if (subtotal >= POSTAGE.freeFromPence) return { subtotal, postage: 0, label: "Free postage" };
   return { subtotal, postage: bulky ? POSTAGE.bulkyPence : POSTAGE.standardPence, label: "Postage & packaging (UK)" };
