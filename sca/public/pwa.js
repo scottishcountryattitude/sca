@@ -49,3 +49,75 @@
     setTimeout(function () { bar.hidden = false; }, 2500);
   }
 })();
+
+/* Compress every customer artwork image before it is sent to /api/upload.
+   This replaces the earlier threshold-only helper in app.js, so ordinary phone
+   photos are resized too and their original camera format is normalized to JPEG. */
+window.shrinkImage = async function (dataUrl) {
+  try {
+    var response = await fetch(dataUrl);
+    var blob = await response.blob();
+    var bitmap;
+    if ('createImageBitmap' in window) {
+      bitmap = await createImageBitmap(blob);
+    } else {
+      bitmap = await new Promise(function (resolve, reject) {
+        var image = new Image();
+        var objectUrl = URL.createObjectURL(blob);
+        image.onload = function () { URL.revokeObjectURL(objectUrl); resolve(image); };
+        image.onerror = function () { URL.revokeObjectURL(objectUrl); reject(new Error('Image could not be decoded')); };
+        image.src = objectUrl;
+      });
+    }
+
+    var maxEdge = 1800;
+    var scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+    var canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    var context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas unavailable');
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    if (bitmap.close) bitmap.close();
+
+    var output = await new Promise(function (resolve, reject) {
+      canvas.toBlob(function (compressed) {
+        if (compressed) resolve(compressed);
+        else reject(new Error('Image compression failed'));
+      }, 'image/jpeg', 0.82);
+    });
+
+    // Lower quality / dimensions if necessary to leave room for base64 JSON overhead.
+    if (output.size > 3 * 1024 * 1024) {
+      output = await new Promise(function (resolve, reject) {
+        canvas.toBlob(function (compressed) {
+          if (compressed) resolve(compressed);
+          else reject(new Error('Image compression failed'));
+        }, 'image/jpeg', 0.62);
+      });
+    }
+    if (output.size > 3 * 1024 * 1024) {
+      var smaller = document.createElement('canvas');
+      var ratio = Math.sqrt((2.5 * 1024 * 1024) / output.size);
+      smaller.width = Math.max(1, Math.round(canvas.width * ratio));
+      smaller.height = Math.max(1, Math.round(canvas.height * ratio));
+      smaller.getContext('2d').drawImage(canvas, 0, 0, smaller.width, smaller.height);
+      output = await new Promise(function (resolve, reject) {
+        smaller.toBlob(function (compressed) {
+          if (compressed) resolve(compressed);
+          else reject(new Error('Image compression failed'));
+        }, 'image/jpeg', 0.68);
+      });
+    }
+
+    return await new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(reader.result); };
+      reader.onerror = function () { reject(new Error('Image could not be read')); };
+      reader.readAsDataURL(output);
+    });
+  } catch (error) {
+    // Keep an already-supported original if the browser cannot decode/convert it.
+    return dataUrl;
+  }
+};
