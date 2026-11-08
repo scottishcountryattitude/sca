@@ -1,7 +1,7 @@
 import { shopStore, getCatalog, getPrices, getReviews, normalizeGiftSets, DEFAULT_PRICES, json, cleanText, isAdmin, adminConfigured, parseImageDataUrl } from "../lib/shop.mjs";
 import { randomBytes } from "node:crypto";
 
-const COLLECTIONS = ["quotes", "born", "pets"];
+const COLLECTIONS = ["quotes", "born", "pets", "daily"];
 
 export default async (req) => {
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
@@ -15,13 +15,27 @@ export default async (req) => {
 
   if (b.action === "add-design") {
     if (!COLLECTIONS.includes(b.collection)) return json({ error: "Bad collection" }, 400);
-    const name = cleanText(b.name, 80), price = Number(b.price);
+    const name = cleanText(b.name, 80), price = Number(b.price), desc = cleanText(b.desc, 300);
     const img = parseImageDataUrl(b.dataUrl, 3 * 1024 * 1024);
     if (!name || !(price >= 0.5 && price <= 500) || !img) return json({ error: "Check the name, price (£0.50–£500) and image." }, 400);
     const id = b.collection[0] + Date.now() + randomBytes(2).toString("hex");
     await store.set(`img/${id}`, img.bytes, { metadata: { type: img.type } });
     const catalog = await getCatalog(store);
-    catalog[b.collection].push({ id, name, price: Math.round(price * 100) / 100, img: `/api/img/${id}` });
+    catalog[b.collection].push({ id, name, desc, price: Math.round(price * 100) / 100, img: `/api/img/${id}` });
+    await store.setJSON("catalog", catalog);
+    return json({ ok: true });
+  }
+
+  if (b.action === "edit-design") {
+    if (!COLLECTIONS.includes(b.collection)) return json({ error: "Bad collection" }, 400);
+    const catalog = await getCatalog(store);
+    const item = catalog[b.collection].find((p) => p.id === b.id);
+    if (!item) return json({ error: "That image was not found." }, 404);
+    const name = cleanText(b.name, 80), price = Number(b.price);
+    if (!name || !(price >= 0.5 && price <= 500)) return json({ error: "Check the name and price (£0.50–£500)." }, 400);
+    item.name = name;
+    item.price = Math.round(price * 100) / 100;
+    item.desc = cleanText(b.desc, 300);
     await store.setJSON("catalog", catalog);
     return json({ ok: true });
   }
