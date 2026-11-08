@@ -20,6 +20,7 @@ export const STUDIO_OTHER_PRICE = 24.99; // custom bag / cowboy hat in Design Yo
 
 export const DEFAULT_CATALOG = {
   quotes: [],
+  daily: [],
   born: [{ id: "b5", name: "Ride Here Bag", price: 15.99, color: "var(--moss)" }],
   pets: [
     { id: "p1", name: "Sassy Scottie", price: 18.99, color: "var(--heather)" },
@@ -68,7 +69,7 @@ export const shopStore = () => getStore({ name: "shop", consistency: "strong" })
 
 export async function getCatalog(store = shopStore()) {
   const c = await store.get("catalog", { type: "json" });
-  return c || structuredClone(DEFAULT_CATALOG);
+  return { ...structuredClone(DEFAULT_CATALOG), ...(c || {}) };
 }
 export async function getPrices(store = shopStore()) {
   const p = await store.get("prices", { type: "json" });
@@ -156,7 +157,7 @@ function checkColour(type, colour) {
   if (["cap", "tee", "hoodie"].includes(type) && !COLOURS.includes(colour)) throw bad("Invalid colour.");
 }
 function findDesign(catalog, id) {
-  for (const k of ["quotes", "born", "pets"]) {
+  for (const k of ["quotes", "born", "pets", "daily"]) {
     const d = catalog[k].find((p) => p.id === id);
     if (d) return d;
   }
