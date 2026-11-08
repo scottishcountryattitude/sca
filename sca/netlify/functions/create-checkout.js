@@ -1,6 +1,3 @@
-js
-// Prices are in pence and live HERE, not in the browser,
-// so customers can't change what they pay.
 const CATALOGUE = {
   tshirt: { name: "T-shirt", price: 2000 },
   hoodie: { name: "Hoodie", price: 3500 },
@@ -55,19 +52,3 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: err.message }) };
   }
 };
-
-Two things to change
-
-The prices above are placeholders. Edit them to your real prices in pence (£20.00 = 2000).
-The ids (tshirt, hoodie, tote) are what your “Buy it now” button will send, so they need to match.
-
-Connect the button
-When the customer clicks “Buy it now”, your page should run this, with their cart as the items list:
-
-js
-const res = await fetch("/.netlify/functions/create-checkout", {
-  method: "POST",
-  body: JSON.stringify({ items: [{ id: "tshirt", size: "M", qty: 1 }] }),
-});
-const data = await res.json();
-if (data.url) window.location = data.url; else alert(data.error);
