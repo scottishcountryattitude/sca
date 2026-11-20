@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Scottish Country Attitude</title>
 <meta name="theme-color" content="#17231d">
-<meta name="description" content="Scottish country quotes, pets and gift sets, made to order.">
+<meta name="description" content="Scottish Country Attitude: Scottish country quotes, sarcastic quotes, pets, military and custom T-shirts, hoodies, caps, mugs and bags, made to order in Scotland.">
+<meta property="og:title" content="Scottish Country Attitude">
+<meta property="og:description" content="Scottish country quotes, sarcastic quotes and your own designs on T-shirts, hoodies, caps, mugs and bags. Made to order.">
+<meta property="og:image" content="https://scottishcountryattitude.co.uk/images/born.webp">
+<meta property="og:url" content="https://scottishcountryattitude.co.uk/">
+<meta property="og:type" content="website">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -35,9 +40,11 @@
     <button data-page="quotes" onclick="showPage('quotes')">Country Quotes</button>
     <button data-page="borncollection" onclick="showPage('borncollection')">Born Here Live Here Ride Here</button>
     <button data-page="pets" onclick="showPage('pets')">Scottish Pets Wae Country Attitude</button>
-    <button data-page="dailyquotes" onclick="showPage('dailyquotes')">Daily Quotes</button>
+    <button data-page="dailyquotes" onclick="showPage('dailyquotes')">Sarcastic Quotes</button>
+    <button data-page="military" onclick="showPage('military')">Military</button>
     <button data-page="studio" onclick="showPage('studio')">Design Your Own</button>
     <button data-page="reviews" onclick="showPage('reviews')">Reviews</button>
+    <button data-page="contact" onclick="showPage('contact')">Contact</button>
   </nav>
   <div id="adminBar">
     <div class="admin-inner">
@@ -45,6 +52,8 @@
       <span class="admin-btns">
         <button type="button" id="editPricesBtn" onclick="openPricePanel()">Edit item prices</button>
         <button type="button" id="editGiftsBtn" onclick="openGiftEditor()">Edit gift sets</button>
+        <button type="button" onclick="openRequests()">Custom requests</button>
+        <button type="button" onclick="openMessages()">Messages</button>
         <button type="button" onclick="adminLogin()">Log out</button>
       </span>
     </div>
@@ -69,7 +78,7 @@
     <div class="section-head">
       <div>
         <h2>Where to start</h2>
-        <p>Every collection prints on the same range: tees, caps, cowboy hats, hooded jumpers, bags and mugs.</p>
+        <p>Every collection prints on the same range: T-shirts, hoodies, caps, mugs and bags.</p>
       </div>
     </div>
     <div class="grid">
@@ -86,8 +95,16 @@
         <div class="card-body"><h3>Sassy Country Pets</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">New designs added often.</p></div>
       </div>
       <div class="card" onclick="showPage('dailyquotes')" style="cursor:pointer">
-        <div class="swatch img" id="card-gift"><span class="tag">Coming soon</span></div>
-        <div class="card-body"><h3>Daily Quotes</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">Coming soon.</p></div>
+        <div class="swatch img" id="card-gift"><span class="tag">Collection</span></div>
+        <div class="card-body"><h3>Sarcastic Quotes</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">Cheeky one-liners. "Forever in your jeans, babe."</p></div>
+      </div>
+      <div class="card" onclick="showPage('military')" style="cursor:pointer">
+        <div class="swatch img" id="card-military"><span class="tag">Collection</span></div>
+        <div class="card-body"><h3>Military</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">For serving and former squaddies. Mugs or the full set.</p></div>
+      </div>
+      <div class="card" onclick="showPage('studio')" style="cursor:pointer">
+        <div class="swatch img" id="card-studio"><span class="tag">Your design</span></div>
+        <div class="card-body"><h3>Design Your Own</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">Hen dos, stag dos, nights out, Christmas and office parties. See a proof before you pay.</p></div>
       </div>
     </div>
   </section>
@@ -149,53 +166,122 @@
   <!-- DAILY QUOTES -->
   <section class="page" id="page-dailyquotes">
     <div class="section-head" style="margin-top:26px;">
-      <div><h2>Daily Quotes</h2><p>Coming soon.</p></div>
+      <div><h2>Sarcastic Quotes</h2><p>Cheeky one-liners for folk with attitude. Tap a design to see it bigger, then order it on a T-shirt, hoodie, cap or mug.</p></div>
     </div>
+    <div class="admin-strip">
+      <span>Admin: add a new sarcastic quote design</span>
+      <label class="add-btn" style="cursor:pointer;">
+        Upload design
+        <input type="file" accept="image/*" style="display:none" onchange="addDesign('daily', event)">
+      </label>
+    </div>
+    <div class="giftset giftbox" id="giftBox-daily"></div>
+    <div class="grid" id="dailyGrid"></div>
+  </section>
+
+  <!-- MILITARY -->
+  <section class="page" id="page-military">
+    <div class="section-head" style="margin-top:26px;">
+      <div><h2>Military</h2><p>For serving and former squaddies, and the families behind them. Order a mug on its own or go for the full set.</p></div>
+    </div>
+    <div class="admin-strip">
+      <span>Admin: add a new military design (your own artwork)</span>
+      <label class="add-btn" style="cursor:pointer;">
+        Upload design
+        <input type="file" accept="image/*" style="display:none" onchange="addDesign('military', event)">
+      </label>
+    </div>
+    <div class="giftset giftbox" id="giftBox-military"></div>
+    <div class="grid" id="militaryGrid"></div>
+    <div class="section-head" style="margin-top:40px;">
+      <div><h2>Upload your own</h2><p>Got a photo or your own artwork you'd like on a mug, T-shirt, hoodie, cap or bag? Upload it, see it on the item, and we'll email you a proof to approve before you pay.</p></div>
+    </div>
+    <button class="add-btn" style="padding:12px 18px;" onclick="startStudio('military')">Upload your own image</button>
   </section>
 
   <!-- STUDIO -->
   <section class="page" id="page-studio">
     <div class="section-head">
-      <div><h2>Design Your Own</h2><p>Upload your design, pick a product, see it mocked up before you pay — this is one flow, not two separate pages.</p></div>
+      <div><h2>Design Your Own</h2><p>Hen do, stag do, a night out with the girls or the boys, a Christmas or office party, or a one-off gift. Tell us what you want, upload your own image if you have one, and we'll email you a proof to approve. Nothing is printed until you've approved it and paid.</p></div>
     </div>
     <div class="studio">
       <div class="studio-panel">
-        <h3>1. Your design</h3>
+        <h3>1. Tell us about it</h3>
+        <div class="field"><label for="cdOccasion">What's it for?</label><select id="cdOccasion"></select></div>
+        <div class="field"><label for="cdKind">What would you like on it?</label>
+          <select id="cdKind">
+            <option value="">Choose…</option>
+            <option>An image</option><option>A quote or words</option><option>Both an image and words</option><option>Not sure, help me decide</option>
+          </select></div>
+        <div class="field"><label for="cdQuote">Quote or words (if any)</label><input type="text" id="cdQuote" maxlength="300" placeholder="e.g. Kirsty's Last Fling, Benidorm 2027"></div>
+        <div class="field"><label for="cdStyle">Style</label><input type="text" id="cdStyle" maxlength="200" placeholder="e.g. bold, vintage, girly, funny, tartan"></div>
+        <div class="field"><label for="cdColours">Colours you'd like in the design</label><input type="text" id="cdColours" maxlength="200" placeholder="e.g. pink and gold, navy and white"></div>
+        <div class="field"><label for="cdDesc">Describe your idea</label><textarea id="cdDesc" maxlength="1500" placeholder="Tell us as much as you can: names, dates, where the words go, a description of the person in your photo…"></textarea></div>
+
+        <h3 style="margin-top:22px;">2. Your image (optional)</h3>
         <div class="field">
-          <label>Upload image</label>
-          <div class="upload-drop" onclick="document.getElementById('studioUpload').click()" id="dropText">
-            Tap to choose an image from your phone or computer
-          </div>
-          <input type="file" id="studioUpload" accept="image/*" style="display:none" onchange="handleStudioUpload(event)">
+          <div class="upload-drop" onclick="document.getElementById('cdUpload').click()" id="cdDrop">Tap to choose a photo, logo or drawing</div>
+          <input type="file" id="cdUpload" accept="image/*" style="display:none" onchange="studioImageChosen(event)">
+          <p class="hint">Upload one to see it on your item straight away. No image? Describe it above and we'll design it for you.</p>
         </div>
-        <h3 style="margin-top:22px;">2. Your product</h3>
-        <div class="field">
-          <label>Product</label>
-          <select id="studioProduct" onchange="renderMockStage();updateStudioFields()">
-            <option value="tee">T-shirt — imaged £${prices.teeImaged.toFixed(2)}</option>
-            <option value="cap">Cap — £${prices.cap.toFixed(2)}</option>
-            <option value="cowboy">Cowboy hat</option>
-            <option value="hoodie">Hooded jumper — imaged £${prices.hoodieImaged.toFixed(2)}</option>
-            <option value="bag">Bag</option>
-            <option value="mug">Mug — from £${prices.mugSmall.toFixed(2)}</option>
-          </select>
-        </div>
-        <div class="field" id="studioSizeField">
-          <label>Size</label>
-          <select id="studioSize">
-            <option>Small</option><option selected>Medium</option><option>Large</option><option>X-Large</option><option>2X-Large</option>
-          </select>
-        </div>
-        <div class="field" id="studioLogoField" style="display:none;">
-          <label style="font-size:0.82rem;"><input type="checkbox" id="studioLogo"> Add our company logo (as well as your design)</label>
-        </div>
-        <div id="studioPriceLine" style="font-size:0.9rem;font-weight:700;margin:8px 0;"></div>
-        <button class="add-btn" style="width:100%;padding:12px;" onclick="addStudioToCart()">Add to cart</button>
+
+        <h3 style="margin-top:22px;">3. Your items</h3>
+        <div class="field"><label for="cdProduct">Item</label><select id="cdProduct" onchange="studioProductChanged()"></select></div>
+        <div class="field" id="cdSizeField"><label for="cdSize">Size</label><select id="cdSize" onchange="studioSizeChanged()"></select></div>
+        <div class="field" id="cdColourField"><label for="cdColour">Colour</label><select id="cdColour" onchange="studioColourChanged()"></select></div>
+        <div id="cdMobilePreview"></div>
+        <div id="cdPrice" style="font-size:0.9rem;font-weight:700;margin:8px 0;"></div>
+        <button class="add-btn" style="width:100%;padding:12px;" onclick="studioAddItem()">Add this item</button>
+        <div id="cdItems" class="cd-items"></div>
+
+        <h3 style="margin-top:22px;">4. Your details</h3>
+        <div class="field"><label for="cdName">Your name</label><input type="text" id="cdName" maxlength="60" autocomplete="name"></div>
+        <div class="field"><label for="cdEmail">Email (we send your proof here)</label><input type="email" id="cdEmail" maxlength="200" autocomplete="email"></div>
+        <div class="field"><label for="cdPhone">Phone (optional)</label><input type="tel" id="cdPhone" maxlength="30" autocomplete="tel"></div>
+        <div class="field delivery" id="cdDelivery"></div>
+        <input type="text" id="cdWebsite" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
+        <button class="add-btn" style="width:100%;padding:14px;font-size:0.95rem;" id="cdSend" onclick="studioSend()">Send for my proof</button>
+        <div class="rev-msg" id="cdMsg"></div>
       </div>
-      <div class="studio-panel">
+      <div class="studio-panel studio-preview">
         <h3>Mock-up preview</h3>
-        <div class="mock-stage" id="mockStage"></div>
-        <p style="font-size:0.78rem;color:rgba(23,35,29,0.5);margin-top:10px;">This is exactly what prints — check placement before you pay.</p>
+        <div id="mockWrap">
+          <canvas id="mockCanvas" width="800" height="800" onclick="openLightboxCanvas()" title="Tap to see it bigger"></canvas>
+          <p class="hint">Tap the preview to see it bigger. The watermark is only on the proof, not on your finished order.</p>
+        </div>
+        <ol class="how">
+          <li>Send your request.</li>
+          <li>We email you a watermarked proof on your chosen items.</li>
+          <li>Approve it, and we email you a secure payment link.</li>
+          <li>Once it's paid, it goes to print.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="page" id="page-contact">
+    <div class="section-head">
+      <div><h2>Contact us</h2><p>Questions, ideas, bulk orders, or a photo of someone you'd like on a T-shirt or hoodie: get in touch.</p></div>
+    </div>
+    <div class="rev-layout">
+      <div class="studio-panel">
+        <h3>Get in touch</h3>
+        <div id="contactInfo" class="contact-info"></div>
+      </div>
+      <div class="studio-panel rev-form">
+        <h3>Send us a message</h3>
+        <div class="field"><label for="ctName">Your name</label><input type="text" id="ctName" maxlength="60" autocomplete="name"></div>
+        <div class="field"><label for="ctEmail">Email</label><input type="email" id="ctEmail" maxlength="200" autocomplete="email"></div>
+        <div class="field"><label for="ctPhone">Phone (optional)</label><input type="tel" id="ctPhone" maxlength="30" autocomplete="tel"></div>
+        <div class="field"><label for="ctTopic">What's it about?</label>
+          <select id="ctTopic"><option>General question</option><option>Idea for a T-shirt or hoodie</option><option>Question about my order</option><option>Wholesale / bulk order</option><option>Other</option></select></div>
+        <div class="field"><label for="ctMessage">Your message</label>
+          <textarea id="ctMessage" maxlength="2000" placeholder="For a photo of a person on a T-shirt or hoodie, give us a brief description: who it's of, the occasion, and any words to go with it."></textarea></div>
+        <input type="text" id="ctWebsite" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
+        <button class="add-btn" style="width:100%;padding:12px;" onclick="sendContact()">Send message</button>
+        <div class="rev-msg" id="ctMsg"></div>
+        <p class="hint">Got a photo ready? Use <a href="#" onclick="startStudio('studio');return false;">Design Your Own</a> to upload it and see it on your item.</p>
       </div>
     </div>
   </section>
@@ -245,7 +331,7 @@
 
 </main>
 
-<footer>Scottish Country Attitude — made to order, printed after payment clears. <a href="#" id="adminLink" onclick="adminLogin();return false;">Admin</a></footer>
+<footer>Scottish Country Attitude — made to order, printed after payment clears. <a href="#" onclick="showPage('contact');return false;">Contact</a> · <a href="#" id="adminLink" onclick="adminLogin();return false;">Admin</a></footer>
 
 <!-- CART DRAWER -->
 <div class="overlay" id="overlay" onclick="closeCart()"></div>
@@ -256,6 +342,7 @@
   </div>
   <div class="drawer-items" id="drawerItems"></div>
   <div class="drawer-foot">
+    <div class="delivery" id="cartDelivery"></div>
     <div class="pp-note" id="ppNote">Free postage on orders of £80 or more</div>
     <div class="total"><span>Total</span><span id="cartTotal">£0.00</span></div>
     <button class="checkout-btn" onclick="buyNow()">Buy it now</button>
@@ -316,6 +403,28 @@
   </div>
 </div>
 
+<!-- LIGHTBOX: a bigger look at a design -->
+<div class="modal lightbox" id="lightbox" onclick="if(event.target===this)closeLightbox()">
+  <div class="modal-card lb-card">
+    <button class="drawer-close lb-close" onclick="closeLightbox()" aria-label="Close">&times;</button>
+    <img id="lbImg" alt="">
+    <h3 id="lbName"></h3>
+    <p id="lbDesc"></p>
+    <div id="lbPrice" class="price"></div>
+    <button class="add-btn" id="lbOrder" style="width:100%;padding:12px;margin-top:6px;">Order this design</button>
+  </div>
+</div>
+
+<!-- ADMIN: custom requests and messages -->
+<div class="modal" id="reqModal">
+  <div class="modal-card tall wide">
+    <button class="drawer-close lb-close" onclick="document.getElementById('reqModal').classList.remove('open')" aria-label="Close">&times;</button>
+    <h3 id="reqTitle">Custom requests</h3>
+    <div id="reqBody"></div>
+  </div>
+</div>
+
+<script src="mockup.js"></script>
 <script src="app.js"></script>
 <div id="installBar" hidden>
   <span id="installText">Install this app on your phone</span>

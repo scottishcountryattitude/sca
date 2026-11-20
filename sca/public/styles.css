@@ -318,3 +318,58 @@ body.is-admin #adminBar{display:block;}
 #adminBar .admin-inner{max-width:1080px; margin:0 auto; padding:10px 18px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;}
 #adminBar .admin-btns{display:flex; flex-wrap:wrap; gap:8px;}
 #adminBar button{background:var(--ink); color:var(--oat); border:none; border-radius:999px; padding:10px 16px; font-family:inherit; font-weight:700; font-size:0.85rem; cursor:pointer;}
+
+/* ---------- design images: always on white, shown whole ---------- */
+.swatch.img.design{background-color:#fff; background-size:contain; background-repeat:no-repeat; background-position:center;}
+.swatch .edit-btn{right:40px; font-size:0.8rem;}
+.card-desc{font-size:0.82rem; color:rgba(23,35,29,0.65); margin:-4px 0 0; line-height:1.4;}
+.order-btn{width:100%; padding:10px;}
+#card-military{background-image:url('images/emblem.webp'); background-size:contain; background-repeat:no-repeat; background-color:#fff;}
+#card-studio{background-image:url('images/quotes.webp');}
+
+/* ---------- lightbox ---------- */
+.lightbox{z-index:90; background:rgba(10,14,11,0.82);}
+.lb-card{max-width:760px; position:relative; max-height:94vh; overflow-y:auto; text-align:center;}
+.lb-card img{width:100%; max-height:68vh; object-fit:contain; background:#fff; border-radius:4px; border:1px solid var(--line);}
+.lb-card h3{margin-top:12px;}
+.lb-close{position:absolute; top:6px; right:10px; font-size:1.8rem; z-index:2;}
+.modal-card.wide{max-width:680px; position:relative;}
+
+/* ---------- design your own / contact forms ---------- */
+.studio-panel input[type=text], .studio-panel input[type=email], .studio-panel input[type=tel], .studio-panel textarea, .studio-panel select,
+.drawer-foot input[type=text]{
+  width:100%; box-sizing:border-box; font-family:'Work Sans'; font-size:0.9rem; padding:9px 10px; border-radius:4px;
+  border:1px solid var(--line); background:#fff; color:#17231d;
+}
+.studio-panel textarea{min-height:110px; resize:vertical;}
+.hint{font-size:0.8rem; color:rgba(23,35,29,0.6); margin:8px 0 0; line-height:1.45;}
+#mockCanvas{width:100%; height:auto; display:block; border:1px solid var(--line); border-radius:3px; background:#fff; cursor:zoom-in;}
+.how{font-size:0.85rem; line-height:1.6; padding-left:20px; margin:14px 0 0; color:rgba(23,35,29,0.75);}
+.cd-items{margin-top:12px;}
+.cd-item{display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); font-size:0.88rem;}
+.cd-item.total{font-weight:700; border-bottom:none;}
+.cd-item button{background:none; border:none; color:var(--rust); font-size:0.8rem; cursor:pointer; text-decoration:underline;}
+.delivery{display:flex; flex-direction:column; gap:6px; margin:8px 0;}
+.delivery .radio{font-size:0.88rem; display:flex; gap:8px; align-items:center;}
+.contact-info p{margin:0 0 16px; line-height:1.5;}
+.contact-info a, .hint a{color:var(--rust); font-weight:600;}
+@media(min-width:760px){ .studio-preview{position:sticky; top:120px; align-self:start;} }
+
+/* ---------- admin: requests ---------- */
+.req{border:1px solid var(--line); border-radius:4px; padding:12px; margin:10px 0; font-size:0.88rem; line-height:1.5; background:#fff;}
+.req .k{color:rgba(23,35,29,0.55); display:inline-block; min-width:72px;}
+.req-top{display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; align-items:center;}
+.badge{font-size:0.72rem; background:var(--oat); padding:3px 8px; border-radius:999px; font-weight:700;}
+.req-paid .badge{background:#2e7d32; color:#fff;}
+.req-proofs{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0;}
+.req-proofs img{width:110px; height:110px; object-fit:cover; border:1px solid var(--line); border-radius:4px; cursor:zoom-in;}
+.req-btns{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; align-items:center;}
+.req-btns .cancel-btn{width:auto;}
+.req-btns label.add-btn{cursor:pointer;}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .swatch.img.design{background-color:#fff;}
+  :root:not([data-theme="light"]) .req{background:#1b231c;}
+  :root:not([data-theme="light"]) .card-desc, :root:not([data-theme="light"]) .hint{color:rgba(239,231,216,0.65);}
+}
+@media(max-width:759px){ .studio-preview h3{display:none;} #cdMobilePreview #mockCanvas{max-width:360px; margin:6px auto 0;} }

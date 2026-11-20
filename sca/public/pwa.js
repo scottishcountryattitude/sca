@@ -80,6 +80,25 @@ window.shrinkImage = async function (dataUrl) {
     context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     if (bitmap.close) bitmap.close();
 
+    // PNG / WebP / GIF may have a see-through background: keep it as PNG when it is small enough,
+    // so the design sits straight on the garment instead of in a box.
+    if (/image\/(png|webp|gif)/i.test(blob.type)) {
+      var png = await new Promise(function (resolve) { canvas.toBlob(resolve, 'image/png'); });
+      if (png && png.size <= 3 * 1024 * 1024) {
+        return await new Promise(function (resolve, reject) {
+          var r = new FileReader();
+          r.onload = function () { resolve(r.result); };
+          r.onerror = reject;
+          r.readAsDataURL(png);
+        });
+      }
+    }
+    // JPEG cannot be see-through: put a white background behind the image (otherwise it turns black)
+    context.globalCompositeOperation = 'destination-over';
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.globalCompositeOperation = 'source-over';
+
     var output = await new Promise(function (resolve, reject) {
       canvas.toBlob(function (compressed) {
         if (compressed) resolve(compressed);

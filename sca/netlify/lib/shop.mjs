@@ -21,6 +21,7 @@ export const STUDIO_OTHER_PRICE = 24.99; // custom bag / cowboy hat in Design Yo
 export const DEFAULT_CATALOG = {
   quotes: [],
   daily: [],
+  military: [],
   born: [{ id: "b5", name: "Ride Here Bag", price: 15.99, color: "var(--moss)" }],
   pets: [
     { id: "p1", name: "Sassy Scottie", price: 18.99, color: "var(--heather)" },
@@ -35,7 +36,8 @@ export const COLOURS = ["White", "Grey", "Navy", "Black"];
    A gift set is a list of pieces (2 to 5 of: mug, bag, cap, tee, hoodie), all in one design from one page.
    The list below is the standard list; the owner can change it from Admin > "Edit gift sets"
    and the changed list is saved on the server. Names are always built from the pieces. */
-export const GIFT_COLLECTIONS = ["quotes", "born", "pets"];
+export const COLLECTIONS = ["quotes", "born", "pets", "daily", "military"];
+export const GIFT_COLLECTIONS = ["quotes", "born", "pets", "daily", "military"];
 export const GIFT_PIECES = ["mug", "bag", "cap", "tee", "hoodie"]; // this is also the order names are written in
 const GIFT_NAME_LABEL = { mug: "Mug", bag: "Bag", cap: "Cap", tee: "T-shirt", hoodie: "Hoodie" };
 export function giftSetName(pieces) {
@@ -157,8 +159,8 @@ function checkColour(type, colour) {
   if (["cap", "tee", "hoodie"].includes(type) && !COLOURS.includes(colour)) throw bad("Invalid colour.");
 }
 function findDesign(catalog, id) {
-  for (const k of ["quotes", "born", "pets", "daily"]) {
-    const d = catalog[k].find((p) => p.id === id);
+  for (const k of COLLECTIONS) {
+    const d = (catalog[k] || []).find((p) => p.id === id);
     if (d) return d;
   }
   return null;
@@ -206,6 +208,7 @@ export function priceLine(spec, { prices, catalog, giftSets = DEFAULT_GIFT_SETS 
     else if (p === "cap") price = prices.cap;
     else if (p === "tee" || p === "hoodie") { checkSize(p, spec.size); price = prices[p + "Imaged"]; size = spec.size; }
     else price = STUDIO_OTHER_PRICE;
+    if (spec.color) { checkColour(p, spec.color); size = [size, spec.color].filter(Boolean).join(", "); }
     const logo = spec.logo && (p === "tee" || p === "hoodie");
     return { pence: toPence(price), name: names[p] + (logo ? " + company logo" : ""), description: size ? `Size: ${size}` : "", hoodie: p === "hoodie", pieces: 1, uploadId: spec.uploadId };
   }
@@ -242,3 +245,65 @@ export function postageFor(lines) {
   if (subtotal >= POSTAGE.freeFromPence) return { subtotal, postage: 0, label: "Free postage" };
   return { subtotal, postage: bulky ? POSTAGE.bulkyPence : POSTAGE.standardPence, label: "Postage & packaging (UK)" };
 }
+
+/* ---------- custom design requests ----------
+   One request can hold several items (T-shirt, hoodie, cap, mug, bag), all with the customer's design. */
+export const CUSTOM_PRODUCTS = { tee: "T-shirt", hoodie: "Hoodie", cap: "Cap", mug: "Mug", bag: "Tote bag" };
+export const OCCASIONS = [
+  "Just for me", "Gift", "Hen do", "Stag do", "Night out with the girls", "Night out with the boys",
+  "Christmas party", "Office party", "Birthday", "Wedding", "Military / regiment", "Club or team", "Other",
+];
+export function customItemPrice(item, prices) {
+  const p = item && item.product;
+  if (!CUSTOM_PRODUCTS[p]) throw bad("Invalid custom item.");
+  let price;
+  if (p === "mug") { checkSize("mug", item.size); price = item.size === MUG_SIZES[0] ? prices.mugSmall : prices.mugLarge; }
+  else if (p === "cap") { checkColour("cap", item.color); price = prices.cap; }
+  else if (p === "bag") price = BAG_BASE_PRICE + BAG_CUSTOM_CHARGE;
+  else { checkSize(p, item.size); checkColour(p, item.color); price = prices[p + "Imaged"]; }
+  const detail = [item.size, item.color].filter(Boolean).join(", ");
+  return { pence: toPence(price), name: `Custom ${CUSTOM_PRODUCTS[p]}`, description: detail, hoodie: p === "hoodie", pieces: 1 };
+}
+
+/* ---------- shop settings (set in Netlify > Environment variables) ---------- */
+export function shopSettings() {
+  const env = (k, d = "") => String(process.env[k] || d).trim();
+  return {
+    town: env("SHOP_TOWN"),
+    collectionMiles: Number(env("COLLECTION_MILES", "10")) || 10,
+    collectionOn: !!env("COLLECTION_POSTCODE"),
+    email: env("SHOP_EMAIL", "scottishcountryattitude@outlook.com"),
+    complaintsEmail: env("COMPLAINTS_EMAIL", "scottishcountryattitude@gmail.com"),
+    whatsapp: env("WHATSAPP_NUMBER"),
+  };
+}
+
+/* ---------- free collection: is the customer's postcode within the radius? ---------- */
+export const cleanPostcode = (s) => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+async function postcodeLatLon(pc) {
+  const res = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(pc)}`);
+  if (!res.ok) return null;
+  const d = await res.json();
+  return d && d.result && d.result.latitude != null ? { lat: d.result.latitude, lon: d.result.longitude } : null;
+}
+export function milesBetween(a, b) {
+  const R = 3958.8, rad = Math.PI / 180;
+  const x = Math.sin(((b.lat - a.lat) * rad) / 2) ** 2 +
+    Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(((b.lon - a.lon) * rad) / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+// Returns { ok, miles } or throws a user-facing error.
+export async function checkCollection(postcode) {
+  const s = shopSettings();
+  const home = cleanPostcode(process.env.COLLECTION_POSTCODE);
+  if (!home) throw bad("Collection isn't available just now. Please choose delivery.");
+  const pc = cleanPostcode(postcode);
+  if (pc.length < 5) throw bad("Please enter your full postcode for collection.");
+  const [a, b] = await Promise.all([postcodeLatLon(home), postcodeLatLon(pc)]);
+  if (!b) throw bad("We couldn't find that postcode. Please check it.");
+  if (!a) throw bad("Collection can't be checked just now. Please choose delivery or try again later.");
+  const miles = milesBetween(a, b);
+  if (miles > s.collectionMiles) throw bad(`Free collection is for customers within ${s.collectionMiles} miles${s.town ? " of " + s.town : ""}. Your postcode is about ${Math.round(miles)} miles away, so please choose delivery.`);
+  return { ok: true, miles };
+}
+export const isEmail = (s) => /^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}\.[a-zA-Z]{2,}$/.test(String(s || ""));

@@ -49,3 +49,37 @@ USING IT
 
 WHEN YOU CHANGE ANY FILE IN public/
   Edit sw.js and change VERSION ('sca-v2' -> 'sca-v3') so installed apps update.
+
+
+NEW PAGES AND FEATURES (November 2026)
+  - Sarcastic Quotes (was Daily Quotes) and Military pages: upload designs in Admin like the other pages,
+    each has a Gift sets box. Military is for your OWN military-themed artwork (official regimental badges
+    need an MOD licence). The Military page also has "Upload your own image".
+  - Tap any design to see it bigger. Admin: the pencil button edits a design's name, price and description.
+  - Uploaded designs now sit on a white background (see-through images used to turn black).
+  - Design Your Own: customer describes what they want (occasion, words, style, colours), can upload an image,
+    picks items (size, then colour), and sends it. They get a WATERMARKED proof by email, tap "I approve",
+    then get a payment link. Nothing is printed until it is paid.
+      * Customer uploaded an image: the proof is made and emailed straight away.
+      * No image: you get an email. Admin > Custom requests > "Make & send proof", choose your finished design,
+        and the watermarked proofs are made and emailed for you.
+      * Admin > Custom requests shows every request and whether it is PAID (checked with Stripe).
+  - Contact page with a message form (messages also appear in Admin > Messages).
+  - Free collection within 10 miles (checked from the customer's postcode).
+
+SETTINGS FOR THE NEW FEATURES (Netlify > Project configuration > Environment variables, then redeploy)
+  RESEND_API_KEY        from resend.com (sends the proof, payment-link and contact emails)
+  SHOP_EMAIL            where your order and contact emails go (default scottishcountryattitude@outlook.com)
+  COMPLAINTS_EMAIL      shown on the Contact page (default scottishcountryattitude@gmail.com)
+  SHOP_TOWN             your town, shown on the Contact page and collection option (e.g. Falkirk)
+  COLLECTION_POSTCODE   your postcode, used privately to check the 10 miles. Leave empty to switch collection off.
+  COLLECTION_MILES      optional, defaults to 10
+  WHATSAPP_NUMBER       optional, your business WhatsApp number. Leave empty to show "coming soon".
+  MAIL_FROM             optional, defaults to "Scottish Country Attitude <orders@scottishcountryattitude.co.uk>"
+
+SETTING UP RESEND (one-off, about 15 minutes)
+  1. Sign up free at resend.com.
+  2. Domains > Add domain > scottishcountryattitude.co.uk (region: Ireland, eu-west-1).
+  3. Resend shows some DNS records. In Cloudflare > DNS, add each one exactly as shown (Proxy: DNS only).
+  4. Back in Resend press Verify. When it says Verified, go to API keys > Create API key (Sending access).
+  5. Copy the key into Netlify as RESEND_API_KEY (mark it secret), then Deploys > Trigger deploy.

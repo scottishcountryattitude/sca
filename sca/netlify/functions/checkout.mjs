@@ -1,4 +1,4 @@
-import { shopStore, getCatalog, getPrices, getGiftSets, priceLine, postageFor, json } from "../lib/shop.mjs";
+import { shopStore, getCatalog, getPrices, getGiftSets, priceLine, postageFor, json, checkCollection, cleanPostcode, shopSettings } from "../lib/shop.mjs";
 
 // Receives what is in the basket, works out the prices itself, and creates a Stripe Checkout page.
 export default async (req) => {
@@ -20,14 +20,22 @@ export default async (req) => {
   } catch (e) {
     return json({ error: e.userFacing ? e.message : "Something in your basket could not be checked." }, 400);
   }
-  const { postage, label } = postageFor(lines);
+  let { postage, label } = postageFor(lines);
+  const collect = !!body.collect;
+  if (collect) {
+    try { await checkCollection(body.postcode); }
+    catch (e) { return json({ error: e.userFacing ? e.message : "Collection could not be checked." }, 400); }
+    postage = 0;
+    label = `Free collection${shopSettings().town ? " (" + shopSettings().town + ")" : ""}`;
+  }
 
   const f = new URLSearchParams();
   f.set("mode", "payment");
   f.set("locale", "en-GB");
   f.set("success_url", `${origin}/?paid=1`);
   f.set("cancel_url", `${origin}/?cancelled=1`);
-  f.set("shipping_address_collection[allowed_countries][0]", "GB");
+  if (!collect) f.set("shipping_address_collection[allowed_countries][0]", "GB");
+  else f.set("metadata[collection]", `Customer collects (postcode ${cleanPostcode(body.postcode)})`);
   f.set("phone_number_collection[enabled]", "true");
   f.set("shipping_options[0][shipping_rate_data][type]", "fixed_amount");
   f.set("shipping_options[0][shipping_rate_data][fixed_amount][amount]", String(postage));

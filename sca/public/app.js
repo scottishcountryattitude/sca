@@ -9,9 +9,14 @@ const defaultProducts = {
     {id:'p1', name:'Sassy Scottie', price:18.99, color:'var(--heather)'},
     {id:'p2', name:'Highland Coo Pup', price:18.99, color:'var(--moss)'},
   ],
+  daily: [],
+  military: [],
 };
+const COLLECTION_KEYS = ['quotes','born','pets','daily','military'];
 const catalogs = {};
-['quotes','born','pets'].forEach(key=>{ catalogs[key] = defaultProducts[key].slice(); });
+COLLECTION_KEYS.forEach(key=>{ catalogs[key] = defaultProducts[key].slice(); });
+let shopSettings = {town:'', collectionMiles:10, collectionOn:false, email:'scottishcountryattitude@outlook.com', complaintsEmail:'scottishcountryattitude@gmail.com', whatsapp:''};
+let OCCASIONS = ['Just for me','Gift','Hen do','Stag do','Night out with the girls','Night out with the boys','Christmas party','Office party','Birthday','Wedding','Military / regiment','Club or team','Other'];
 
 /* item types available once a design image is clicked, and the sizes each one takes */
 /* base sizes per item type (fixed) */
@@ -72,16 +77,19 @@ function productCard(p, collectionKey){
   const safeName = p.name.replace(/'/g,'');
   const safeImg = (p.img||'').replace(/'/g,'');
   const delBtn = collectionKey
-    ? `<button class="del-btn" title="Remove this image" onclick="event.stopPropagation();deleteDesign('${collectionKey}','${safeId}','${safeName}')">&times;</button>`
+    ? `<button class="del-btn" title="Remove this image" onclick="event.stopPropagation();deleteDesign('${collectionKey}','${safeId}','${safeName}')">&times;</button>
+       <button class="del-btn edit-btn" title="Edit name, price and description" onclick="event.stopPropagation();editDesign('${collectionKey}','${safeId}')">✎</button>`
     : '';
   const swatch = p.img
-    ? `<div class="swatch img" style="background-image:url('${p.img}');cursor:pointer;" onclick="onImageClick('${safeId}')">${delBtn}<span class="tag">Click image to order</span></div>`
-    : `<div class="swatch" style="background:${p.color};cursor:pointer;" onclick="onImageClick('${safeId}')">${delBtn}<span class="mark">${p.name}</span><span class="tag">Click image to order</span></div>`;
+    ? `<div class="swatch img design" style="background-image:url('${p.img}');cursor:zoom-in;" onclick="openLightbox('${collectionKey||''}','${safeId}')">${delBtn}<span class="tag">Tap to see it bigger</span></div>`
+    : `<div class="swatch" style="background:${p.color};cursor:pointer;" onclick="onImageClick('${safeId}')">${delBtn}<span class="mark">${p.name}</span><span class="tag">Tap to order</span></div>`;
   return `<div class="card">
     ${swatch}
     <div class="card-body">
-      <h3>${p.name}</h3>
+      <h3>${escHtml(p.name)}</h3>
+      ${p.desc ? `<p class="card-desc">${escHtml(p.desc)}</p>` : ''}
       <span class="price">from £${p.price.toFixed(2)}</span>
+      <button class="add-btn order-btn" onclick="onImageClick('${safeId}')">Order this design</button>
       <div class="order-flow" id="flow-${safeId}" data-base="${p.price}" data-name="${safeName}" data-img="${safeImg}"></div>
     </div>
   </div>`;
@@ -249,10 +257,65 @@ function closeOrderPreview(){
 }
 
 function renderGrids(){
-  document.getElementById('quotesGrid').innerHTML = catalogs.quotes.map(p=>productCard(p,'quotes')).join('');
-  document.getElementById('bornGrid').innerHTML = catalogs.born.map(p=>productCard(p,'born')).join('');
-  document.getElementById('petsGrid').innerHTML = catalogs.pets.map(p=>productCard(p,'pets')).join('');
+  const grid = (id, key, empty) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.innerHTML = catalogs[key].length ? catalogs[key].map(p=>productCard(p,key)).join('') : `<p class="empty-note">${empty}</p>`;
+  };
+  grid('quotesGrid','quotes','New designs coming soon.');
+  grid('bornGrid','born','New designs coming soon.');
+  grid('petsGrid','pets','New designs coming soon.');
+  grid('dailyGrid','daily','New sarcastic quotes coming soon.');
+  grid('militaryGrid','military','New military designs coming soon. Got your own photo or artwork? Upload it below.');
   renderPetsBag();
+}
+
+/* ---------------- lightbox: tap a design to see it bigger ---------------- */
+function findDesignAnywhere(id){
+  for(const k of COLLECTION_KEYS){ const d = (catalogs[k]||[]).find(p=>p.id===id); if(d) return d; }
+  return null;
+}
+function openLightbox(key, id){
+  const d = findDesignAnywhere(id);
+  if(!d || !d.img) return;
+  document.getElementById('lbImg').src = d.img;
+  document.getElementById('lbImg').alt = d.name;
+  document.getElementById('lbName').textContent = d.name;
+  document.getElementById('lbDesc').textContent = d.desc || '';
+  document.getElementById('lbPrice').textContent = 'from £' + d.price.toFixed(2);
+  const btn = document.getElementById('lbOrder');
+  btn.style.display = '';
+  btn.onclick = ()=>{ closeLightbox(); onImageClick(id); const f = document.getElementById('flow-'+id); if(f) f.scrollIntoView({behavior:'smooth', block:'center'}); };
+  document.getElementById('lightbox').classList.add('open');
+}
+function openLightboxImage(src, name){
+  document.getElementById('lbImg').src = src;
+  document.getElementById('lbName').textContent = name || '';
+  document.getElementById('lbDesc').textContent = '';
+  document.getElementById('lbPrice').textContent = '';
+  document.getElementById('lbOrder').style.display = 'none';
+  document.getElementById('lightbox').classList.add('open');
+}
+function openLightboxCanvas(){
+  const c = document.getElementById('mockCanvas');
+  if(c) openLightboxImage(c.toDataURL('image/jpeg', 0.9), 'Your mock-up');
+}
+function closeLightbox(){ document.getElementById('lightbox').classList.remove('open'); }
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') closeLightbox(); });
+
+async function editDesign(key, id){
+  const d = (catalogs[key]||[]).find(p=>p.id===id);
+  if(!d) return;
+  const name = prompt('Name of this design:', d.name);
+  if(name === null) return;
+  const price = prompt('Price (£):', d.price.toFixed(2));
+  if(price === null) return;
+  const desc = prompt('Description (shown under the design, optional):', d.desc || '');
+  if(desc === null) return;
+  try{
+    await adminCall({action:'edit-design', collection:key, id, name, price: parseFloat(price), desc});
+    await loadShop();
+  }catch(e){ alert(e.message || 'Could not save those changes.'); }
 }
 
 /* ---------------- pets: bag card ---------------- */
@@ -362,6 +425,8 @@ function addDesign(collectionKey, evt){
       canvas.width = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
       const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';   /* white background, so see-through images don't turn black */
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
       adminCall({action:'add-design', collection: collectionKey, name, price, dataUrl})
@@ -380,7 +445,7 @@ function addDesign(collectionKey, evt){
    then a combination, then one of THAT page's designs, then the size / colour for each piece.
    The standard list below must match the server (tests/shop.test.mjs checks it). The owner can change the
    list from Admin > "Edit gift sets"; the changed list comes from the server in applyShop(). */
-const GIFT_PAGES = ['quotes','born','pets'];
+const GIFT_PAGES = ['quotes','born','pets','daily','military'];
 const GIFT_ORDER = ['mug','bag','cap','tee','hoodie'];
 const giftPieceLabel = p => ({mug:'Mug', bag:'Bag', cap:'Cap', tee:'T-Shirt', hoodie:'Hoodie'})[p];
 const giftNameLabel = p => ({mug:'Mug', bag:'Bag', cap:'Cap', tee:'T-shirt', hoodie:'Hoodie'})[p];
@@ -409,7 +474,7 @@ const defaultGiftSets = [
 ];
 let giftSets = defaultGiftSets.map(g=>({id:g.id, pieces:g.pieces.slice()}));
 /* what each page's box is currently showing: {count, setId, design, pieces:{mug:{...}, ...}} */
-const giftUI = {quotes:{}, born:{}, pets:{}};
+const giftUI = {quotes:{}, born:{}, pets:{}, daily:{}, military:{}};
 const GIFT_COUNT_LABELS = {2:'2 item gift set', 3:'3 item gift set', 4:'4 item gift set', 5:'5 item gift set (full set)'};
 
 function currentGiftSet(key){
@@ -615,70 +680,342 @@ async function resetGiftEditor(){
   }catch(e){ alert(e.message || 'Gift sets could not be reset.'); }
 }
 
-/* ---------------- studio / mock-up ---------------- */
-let studioImage = null;
-const productSVGs = {
-  tee: `<svg viewBox="0 0 200 220"><path d="M60 10 L20 40 L35 65 L55 55 L55 200 L145 200 L145 55 L165 65 L180 40 L140 10 L120 25 L80 25 Z" fill="#fff" stroke="#17231d" stroke-width="3"/></svg>`,
-  cap: `<svg viewBox="0 0 200 140"><path d="M30 90 Q100 30 170 90 L170 110 Q100 70 30 110 Z" fill="#fff" stroke="#17231d" stroke-width="3"/><path d="M20 100 L60 95 L58 115 L15 118 Z" fill="#fff" stroke="#17231d" stroke-width="3"/></svg>`,
-  cowboy: `<svg viewBox="0 0 200 150"><ellipse cx="100" cy="110" rx="90" ry="18" fill="#fff" stroke="#17231d" stroke-width="3"/><path d="M55 105 Q60 30 100 30 Q140 30 145 105" fill="#fff" stroke="#17231d" stroke-width="3"/></svg>`,
-  hoodie: `<svg viewBox="0 0 200 230"><path d="M60 20 L20 50 L35 75 L55 65 L55 210 L145 210 L145 65 L165 75 L180 50 L140 20 Q100 45 60 20 Z" fill="#fff" stroke="#17231d" stroke-width="3"/><circle cx="100" cy="35" r="14" fill="none" stroke="#17231d" stroke-width="3"/></svg>`,
-  bag: `<svg viewBox="0 0 200 200"><rect x="35" y="60" width="130" height="120" rx="6" fill="#fff" stroke="#17231d" stroke-width="3"/><path d="M70 60 Q70 20 100 20 Q130 20 130 60" fill="none" stroke="#17231d" stroke-width="3"/></svg>`,
-  mug: `<svg viewBox="0 0 200 180"><rect x="45" y="30" width="100" height="120" rx="8" fill="#fff" stroke="#17231d" stroke-width="3"/><path d="M145 60 Q185 60 185 95 Q185 130 145 130" fill="none" stroke="#17231d" stroke-width="3"/></svg>`,
+/* ---------------- Design Your Own: custom request with proof ----------------
+   Customer describes what they want, optionally uploads an image, picks items (size, then colour),
+   and sends the request. With an image, watermarked proofs are made here and emailed to approve.
+   Payment only happens after they approve. Prices are checked again on the server. */
+const STUDIO_PRODUCTS = {
+  tee:    {label:'T-shirt',  sizes:['Small','Medium','Large','X-Large','2X-Large'], colours:true},
+  hoodie: {label:'Hoodie',   sizes:['Small','Medium','Large','X-Large','2X-Large'], colours:true},
+  cap:    {label:'Cap',      sizes:null, colours:true},
+  mug:    {label:'Mug',      sizes:['Standard (11oz)','Large (15oz)'], colours:false},
+  bag:    {label:'Tote bag', sizes:null, colours:false},
 };
-function handleStudioUpload(evt){
+const studio = {image:null, items:[], source:'studio', ready:false};
+
+function studioItemPrice(it){
+  if(it.product==='mug') return mugPrices[it.size] || prices.mugSmall;
+  if(it.product==='cap') return prices.cap;
+  if(it.product==='bag') return BAG_BASE_PRICE + BAG_CUSTOM_CHARGE;
+  return prices[it.product+'Imaged'];
+}
+function studioCurrent(){
+  const product = document.getElementById('cdProduct').value;
+  const size = document.getElementById('cdSize').value;
+  const color = document.getElementById('cdColour').value;
+  return {product, size: STUDIO_PRODUCTS[product].sizes ? size : '', color: STUDIO_PRODUCTS[product].colours ? color : ''};
+}
+function studioInit(){
+  const occ = document.getElementById('cdOccasion');
+  if(occ && !occ.options.length){
+    occ.innerHTML = '<option value="">Choose…</option>' + OCCASIONS.map(o=>`<option>${escHtml(o)}</option>`).join('');
+  }
+  const prod = document.getElementById('cdProduct');
+  if(prod){
+    const keep = prod.value || 'tee';
+    prod.innerHTML = Object.keys(STUDIO_PRODUCTS).map(k=>{
+      const t = STUDIO_PRODUCTS[k];
+      const from = k==='mug' ? 'from £'+prices.mugSmall.toFixed(2) : '£'+studioItemPrice({product:k}).toFixed(2);
+      return `<option value="${k}">${t.label} — ${from}</option>`;
+    }).join('');
+    prod.value = keep;
+  }
+  placeStudioPreview();
+  if(!studio.ready){ studio.ready = true; studioProductChanged(); }
+  else { studioRenderPrice(); renderStudioMock(); }
+  renderDeliveryChoice('cdDelivery', 'cd');
+  renderStudioItems();
+}
+/* on phones the preview sits right under the item choices, so customers see it while they choose */
+function placeStudioPreview(){
+  const wrap = document.getElementById('mockWrap');
+  const mobile = window.matchMedia('(max-width: 759px)').matches;
+  const target = mobile ? document.getElementById('cdMobilePreview') : document.querySelector('.studio-preview h3');
+  if(!wrap || !target) return;
+  if(mobile && wrap.parentElement !== target) target.appendChild(wrap);
+  if(!mobile && wrap.previousElementSibling !== target) target.after(wrap);
+}
+window.addEventListener('resize', placeStudioPreview);
+
+function studioProductChanged(){
+  const product = document.getElementById('cdProduct').value;
+  const t = STUDIO_PRODUCTS[product];
+  const sizeField = document.getElementById('cdSizeField');
+  const sizeSel = document.getElementById('cdSize');
+  if(t.sizes){
+    sizeField.style.display = '';
+    sizeSel.innerHTML = '<option value="">Choose size…</option>' + t.sizes.map(z=>`<option>${z}</option>`).join('');
+  } else {
+    sizeField.style.display = 'none';
+    sizeSel.innerHTML = '';
+  }
+  document.getElementById('cdColour').innerHTML = '';
+  studioSizeChanged();
+}
+/* colour is only offered once the size has been chosen (caps have no size, so colour shows straight away) */
+function studioSizeChanged(){
+  const product = document.getElementById('cdProduct').value;
+  const t = STUDIO_PRODUCTS[product];
+  const colourField = document.getElementById('cdColourField');
+  const colourSel = document.getElementById('cdColour');
+  const sizeChosen = !t.sizes || !!document.getElementById('cdSize').value;
+  if(t.colours && sizeChosen){
+    const keep = colourSel.value;
+    colourField.style.display = '';
+    colourSel.innerHTML = '<option value="">Choose colour…</option>' + productColors.map(c=>`<option ${c===keep?'selected':''}>${c}</option>`).join('');
+  } else {
+    colourField.style.display = 'none';
+    colourSel.innerHTML = '';
+  }
+  studioRenderPrice();
+  renderStudioMock();
+}
+function studioColourChanged(){ studioRenderPrice(); renderStudioMock(); }
+function studioRenderPrice(){
+  const it = studioCurrent();
+  const el = document.getElementById('cdPrice');
+  if(it.product==='mug' && !it.size){ el.textContent = 'From £' + prices.mugSmall.toFixed(2); return; }
+  el.textContent = STUDIO_PRODUCTS[it.product].label + ' — £' + studioItemPrice(it).toFixed(2);
+}
+let studioMockBusy = Promise.resolve();
+function renderStudioMock(){
+  const c = document.getElementById('mockCanvas');
+  if(!c || typeof drawMockup !== 'function') return;
+  const it = studioCurrent();
+  studioMockBusy = studioMockBusy.then(()=>drawMockup(c, it.product, it.color || 'White', studio.image, true)).catch(()=>{});
+}
+function studioImageChosen(evt){
   const file = evt.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = e => { studioImage = e.target.result; renderMockStage(); document.getElementById('dropText').textContent = file.name + ' — tap to change'; };
+  reader.onload = async e => {
+    studio.image = await shrinkImage(e.target.result);
+    document.getElementById('cdDrop').textContent = file.name + ' — tap to change';
+    renderStudioMock();
+  };
   reader.readAsDataURL(file);
+  evt.target.value = '';
 }
-function renderMockStage(){
-  const product = document.getElementById('studioProduct').value;
-  const stage = document.getElementById('mockStage');
-  stage.innerHTML = productSVGs[product];
-  if(studioImage){
-    const img = document.createElement('img');
-    img.src = studioImage;
-    img.className = 'placed-design';
-    img.style.top = '38%';
-    img.style.left = '50%';
-    img.style.transform = 'translate(-50%,-50%)';
-    stage.appendChild(img);
+function studioAddItem(){
+  const it = studioCurrent();
+  const t = STUDIO_PRODUCTS[it.product];
+  if(t.sizes && !it.size){ studioMsg('Please choose a size first.', 'err'); return; }
+  if(t.colours && !it.color){ studioMsg('Please choose a colour.', 'err'); return; }
+  studio.items.push(it);
+  studioMsg('', '');
+  renderStudioItems();
+}
+function studioRemoveItem(i){ studio.items.splice(i,1); renderStudioItems(); }
+function renderStudioItems(){
+  const el = document.getElementById('cdItems');
+  if(!el) return;
+  if(!studio.items.length){ el.innerHTML = '<p class="hint">No items added yet. Choose an item above and tap "Add this item". Add as many as you like.</p>'; return; }
+  const total = studio.items.reduce((s,it)=>s+studioItemPrice(it),0);
+  el.innerHTML = studio.items.map((it,i)=>`<div class="cd-item">
+      <span>${STUDIO_PRODUCTS[it.product].label}${it.size?', '+it.size:''}${it.color?', '+it.color:''}</span>
+      <span>£${studioItemPrice(it).toFixed(2)} <button onclick="studioRemoveItem(${i})">Remove</button></span>
+    </div>`).join('') + `<div class="cd-item total"><span>Items total</span><span>£${total.toFixed(2)}</span></div>
+    <p class="hint">Postage is added when you pay (free on orders of £80 or more${shopSettings.collectionOn ? ', or free collection' : ''}).</p>`;
+}
+function studioMsg(text, kind){
+  const m = document.getElementById('cdMsg');
+  m.textContent = text; m.className = 'rev-msg ' + (kind||'');
+}
+function startStudio(source){
+  studio.source = source === 'military' ? 'military' : 'studio';
+  showPage('studio');
+  if(source === 'military'){
+    const occ = document.getElementById('cdOccasion');
+    if(occ) occ.value = 'Military / regiment';
   }
 }
-function studioPrice(){
-  const product = document.getElementById('studioProduct').value;
-  const size = document.getElementById('studioSize').value;
-  if(product==='mug') return mugPrices[size] || prices.mugSmall;
-  if(product==='cap') return prices.cap;
-  if(product==='tee') return prices.teeImaged;
-  if(product==='hoodie') return prices.hoodieImaged;
-  return 24.99;
-}
-function updateStudioFields(){
-  const product = document.getElementById('studioProduct').value;
-  const sizeField = document.getElementById('studioSizeField');
-  const sizeSelect = document.getElementById('studioSize');
-  if(product==='mug'){
-    sizeField.style.display = '';
-    sizeSelect.innerHTML = `<option>Standard (11oz)</option><option>Large (15oz)</option>`;
-  } else if(product==='cap'){
-    sizeField.style.display = 'none';
-  } else {
-    sizeField.style.display = '';
-    sizeSelect.innerHTML = `<option>Small</option><option selected>Medium</option><option>Large</option><option>X-Large</option><option>2X-Large</option>`;
+let studioSending = false;
+async function studioSend(){
+  if(studioSending) return;
+  const val = id => document.getElementById(id).value.trim();
+  const customer = {name: val('cdName'), email: val('cdEmail'), phone: val('cdPhone')};
+  const brief = {occasion: val('cdOccasion'), kind: val('cdKind'), quoteText: val('cdQuote'), style: val('cdStyle'), colours: val('cdColours'), description: val('cdDesc')};
+  if(!studio.items.length){
+    /* if they've chosen an item but not pressed "Add this item", add it for them */
+    const it = studioCurrent(), t = STUDIO_PRODUCTS[it.product];
+    if((!t.sizes || it.size) && (!t.colours || it.color)) studio.items.push(it);
+    else { studioMsg('Please add at least one item (choose the size and colour, then "Add this item").', 'err'); return; }
+    renderStudioItems();
   }
-  document.getElementById('studioLogoField').style.display = (product==='tee'||product==='hoodie') ? '' : 'none';
-  document.getElementById('studioPriceLine').textContent = '£' + studioPrice().toFixed(2);
+  if(!studio.image && brief.description.length < 5 && !brief.quoteText){ studioMsg('Please describe what you would like, or upload an image.', 'err'); return; }
+  if(!customer.name){ studioMsg('Please add your name.', 'err'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(customer.email)){ studioMsg('Please add a valid email address, so we can send your proof.', 'err'); return; }
+  const delivery = readDeliveryChoice('cd');
+  if(delivery.collect && delivery.postcode.replace(/\s/g,'').length < 5){ studioMsg('Please enter your postcode for collection.', 'err'); return; }
+
+  studioSending = true;
+  const btn = document.getElementById('cdSend');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try{
+    let uploadId = null, proofs = [];
+    if(studio.image){
+      studioMsg('Uploading your image…', '');
+      uploadId = (await postJSON('/api/upload', {dataUrl: studio.image})).id;
+      studioMsg('Making your proofs…', '');
+      for(const it of studio.items) proofs.push(await makeProof(it.product, it.color || 'White', studio.image));
+    }
+    const data = await postJSON('/api/custom', {customer, brief, items: studio.items, uploadId, proofs, delivery, source: studio.source, website: document.getElementById('cdWebsite').value});
+    studio.items = []; studio.image = null;
+    renderStudioItems(); renderStudioMock();
+    document.getElementById('cdDrop').textContent = 'Tap to choose a photo, logo or drawing';
+    ['cdQuote','cdStyle','cdColours','cdDesc'].forEach(id=>document.getElementById(id).value='');
+    const title = data.status === 'awaiting-approval' ? 'Check your email!' : 'Request sent!';
+    const text = data.status === 'awaiting-approval'
+      ? `We've emailed your watermarked proof to ${customer.email}. Tap "I approve this design" in the email and we'll send your payment link. Nothing is printed until it's paid. Your reference: ${data.id}.`
+      : `Thanks ${customer.name}! We'll design it and email a watermarked proof to ${customer.email} for you to approve. Nothing is printed until you've approved it and paid. Your reference: ${data.id}.`;
+    document.getElementById('payTitle').textContent = title;
+    document.getElementById('payText').textContent = text + (data.emailOn === false ? ' (If the email does not arrive, contact us with your reference.)' : '');
+    document.getElementById('payModal').classList.add('open');
+    studioMsg('Sent ✓', 'ok');
+  }catch(e){
+    studioMsg(e.message || 'Sorry, that could not be sent. Please try again.', 'err');
+  }
+  studioSending = false;
+  btn.disabled = false; btn.textContent = 'Send for my proof';
 }
-function addStudioToCart(){
-  if(!studioImage){ alert('Upload a design first so we can show you the mock-up.'); return; }
-  const product = document.getElementById('studioProduct').value;
-  const size = document.getElementById('studioSize').value;
-  const logo = document.getElementById('studioLogo').checked && (product==='tee'||product==='hoodie');
-  const names = {tee:'Custom T-shirt', cap:'Custom Cap', cowboy:'Custom Cowboy Hat', hoodie:'Custom Hoodie', bag:'Custom Bag', mug:'Custom Mug'};
-  const name = names[product] + (logo ? ' + company logo' : '');
-  addToCart('custom-'+Date.now(), name, studioPrice(), product==='cap' ? '' : size, {k:'studio', product, size: product==='cap' ? '' : size, logo}, studioImage);
+
+/* ---------------- delivery or free collection ---------------- */
+const deliveryState = {};
+function renderDeliveryChoice(elId, key){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  if(!shopSettings.collectionOn){ el.innerHTML = ''; deliveryState[key] = {collect:false, postcode:''}; return; }
+  const st = deliveryState[key] || (deliveryState[key] = {collect:false, postcode:''});
+  const where = shopSettings.town ? ' of ' + escHtml(shopSettings.town) : '';
+  el.innerHTML = `<label class="radio"><input type="radio" name="dl-${key}" ${!st.collect?'checked':''} onchange="setDelivery('${key}',false)"> Post it to me</label>
+    <label class="radio"><input type="radio" name="dl-${key}" ${st.collect?'checked':''} onchange="setDelivery('${key}',true)"> Free collection (within ${shopSettings.collectionMiles} miles${where})</label>
+    <input type="text" id="pc-${key}" placeholder="Your postcode" maxlength="9" value="${escHtml(st.postcode)}" style="display:${st.collect?'block':'none'}" oninput="deliveryState['${key}'].postcode=this.value">`;
+}
+function setDelivery(key, collect){
+  deliveryState[key].collect = collect;
+  const pc = document.getElementById('pc-'+key);
+  if(pc) pc.style.display = collect ? 'block' : 'none';
+  if(key === 'cart') updateCartUI();
+}
+function readDeliveryChoice(key){
+  const st = deliveryState[key] || {collect:false, postcode:''};
+  return {collect: !!(shopSettings.collectionOn && st.collect), postcode: (st.postcode||'').trim()};
+}
+
+/* ---------------- contact ---------------- */
+function renderContact(){
+  const el = document.getElementById('contactInfo');
+  if(!el) return;
+  const s = shopSettings;
+  const wa = String(s.whatsapp||'').replace(/[^0-9]/g,'').replace(/^0/,'44');
+  el.innerHTML = `
+    <p><strong>Email</strong><br><a href="mailto:${escHtml(s.email)}">${escHtml(s.email)}</a></p>
+    <p><strong>WhatsApp</strong><br>${wa ? `<a href="https://wa.me/${wa}" target="_blank" rel="noopener">Message us on WhatsApp</a>` : 'Coming soon. Email us for now.'}</p>
+    ${s.town ? `<p><strong>Where we are</strong><br>${escHtml(s.town)}</p>` : ''}
+    ${s.collectionOn ? `<p><strong>Free collection</strong><br>Live within ${s.collectionMiles} miles${s.town?' of '+escHtml(s.town):''}? Choose free collection when you order.</p>` : ''}
+    <p><strong>Complaints</strong><br>Sorry if something's not right. Please email <a href="mailto:${escHtml(s.complaintsEmail)}">${escHtml(s.complaintsEmail)}</a> with your order details and we'll put it right.</p>
+    <p class="hint">Everything is made to order and only printed once payment has cleared.</p>`;
+}
+async function sendContact(){
+  const val = id => document.getElementById(id).value.trim();
+  const m = document.getElementById('ctMsg');
+  const body = {name: val('ctName'), email: val('ctEmail'), phone: val('ctPhone'), topic: val('ctTopic'), message: val('ctMessage'), website: val('ctWebsite')};
+  if(!body.name || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(body.email)){ m.textContent = 'Please add your name and a valid email address.'; m.className='rev-msg err'; return; }
+  if(body.message.length < 5){ m.textContent = 'Please write a short message.'; m.className='rev-msg err'; return; }
+  try{
+    await postJSON('/api/contact', body);
+    ['ctMessage','ctPhone'].forEach(id=>document.getElementById(id).value='');
+    m.textContent = "Thanks, we've got your message and will be in touch soon."; m.className = 'rev-msg ok';
+  }catch(e){ m.textContent = e.message || 'Sorry, that could not be sent.'; m.className = 'rev-msg err'; }
+}
+
+/* ---------------- admin: custom requests and messages ---------------- */
+let adminRequests = [];
+async function openRequests(){
+  document.getElementById('reqTitle').textContent = 'Custom requests';
+  document.getElementById('reqBody').innerHTML = '<p>Loading…</p>';
+  document.getElementById('reqModal').classList.add('open');
+  try{
+    const data = await adminCall({action:'list-requests'});
+    adminRequests = data.requests || [];
+    renderRequests();
+  }catch(e){ document.getElementById('reqBody').innerHTML = `<p class="rev-msg err">${escHtml(e.message||'Could not load requests.')}</p>`; }
+}
+function renderRequests(){
+  const body = document.getElementById('reqBody');
+  if(!adminRequests.length){ body.innerHTML = '<p>No custom requests yet.</p>'; return; }
+  body.innerHTML = adminRequests.map(r=>{
+    const b = r.brief || {};
+    const line = (k,v)=> v ? `<div><span class="k">${k}</span> ${escHtml(v)}</div>` : '';
+    const when = new Date(r.created).toLocaleString('en-GB', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+    return `<div class="req req-${r.status}">
+      <div class="req-top"><strong>${escHtml(r.customer.name)}</strong> <span class="badge">${escHtml(r.statusLabel)}</span></div>
+      <div class="hint">${when} · ref ${r.id}${r.source==='military'?' · Military page':''}</div>
+      <div><a href="mailto:${escHtml(r.customer.email)}">${escHtml(r.customer.email)}</a> ${escHtml(r.customer.phone||'')}</div>
+      ${line('Occasion', b.occasion)}${line('Wants', b.kind)}${line('Words', b.quoteText)}${line('Style', b.style)}${line('Colours', b.colours)}${line('Idea', b.description)}
+      ${line('Items', r.items.join(' | '))}
+      ${line('Delivery', r.delivery && r.delivery.collect ? 'Free collection, postcode ' + r.delivery.postcode : 'Post')}
+      ${r.total!=null ? `<div><span class="k">Total</span> £${(r.total/100).toFixed(2)}</div>` : ''}
+      ${r.upload ? `<div><a href="${r.upload}" target="_blank" rel="noopener">Customer's original image (full size)</a></div>` : ''}
+      ${r.proofs.length ? `<div class="req-proofs">${r.proofs.map(u=>`<img src="${u}" alt="proof" onclick="openLightboxImage('${u}','Proof')">`).join('')}</div>` : ''}
+      <div class="req-btns">
+        ${['needs-design','awaiting-approval'].includes(r.status) ? `<label class="add-btn">${r.proofs.length?'Make a new proof':'Make &amp; send proof'}<input type="file" accept="image/*" style="display:none" onchange="adminMakeProof('${r.id}', event)"></label>` : ''}
+        ${r.status==='approved' ? `<button class="add-btn" onclick="adminSetStatus('${r.id}','paid')">Mark as paid</button>` : ''}
+        ${r.status==='paid' ? `<button class="add-btn" onclick="adminSetStatus('${r.id}','printed')">Mark as sent to print</button>` : ''}
+        ${!['printed','cancelled'].includes(r.status) ? `<button class="cancel-btn" onclick="adminSetStatus('${r.id}','cancelled')">Cancel</button>` : ''}
+        <button class="cancel-btn" onclick="adminDeleteRequest('${r.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+/* Admin uploads the finished design: a watermarked proof is made for each item the customer chose, then emailed. */
+async function adminMakeProof(id, evt){
+  const file = evt.target.files[0];
+  evt.target.value = '';
+  const r = adminRequests.find(x=>x.id===id);
+  if(!file || !r) return;
+  const dataUrl = await new Promise(res=>{ const fr = new FileReader(); fr.onload = e=>res(e.target.result); fr.readAsDataURL(file); });
+  const design = await shrinkImage(dataUrl);
+  const proofs = [];
+  for(const it of r.rawItems) proofs.push(await makeProof(it.product, it.color || 'White', design));
+  if(!confirm(`Email ${proofs.length} watermarked proof${proofs.length>1?'s':''} to ${r.customer.email} to approve?`)) return;
+  try{
+    const out = await adminCall({action:'send-proof', id, proofs});
+    alert(out.emailed ? 'Proof emailed to the customer.' : 'Proof saved, but email is not set up yet, so it was NOT emailed. Send the customer this link to approve:\n\n' + out.approveLink);
+    openRequests();
+  }catch(e){ alert(e.message || 'Could not send the proof.'); }
+}
+async function adminSetStatus(id, status){
+  const words = {paid:'Mark this as paid? (Only if you have checked the payment in Stripe.)', printed:'Mark as sent to print?', cancelled:'Cancel this request?'};
+  if(!confirm(words[status])) return;
+  try{ await adminCall({action:'set-request-status', id, status}); openRequests(); }
+  catch(e){ alert(e.message || 'Could not update.'); }
+}
+async function adminDeleteRequest(id){
+  if(!confirm('Delete this request and its proofs? This cannot be undone.')) return;
+  try{ await adminCall({action:'delete-request', id}); openRequests(); }
+  catch(e){ alert(e.message || 'Could not delete.'); }
+}
+async function openMessages(){
+  document.getElementById('reqTitle').textContent = 'Messages';
+  const body = document.getElementById('reqBody');
+  body.innerHTML = '<p>Loading…</p>';
+  document.getElementById('reqModal').classList.add('open');
+  try{
+    const data = await adminCall({action:'list-messages'});
+    const list = data.messages || [];
+    body.innerHTML = !list.length ? '<p>No messages yet.</p>' : list.map(m=>`<div class="req">
+      <div class="req-top"><strong>${escHtml(m.name)}</strong> <span class="badge">${escHtml(m.topic)}</span></div>
+      <div class="hint">${new Date(m.date).toLocaleString('en-GB')}</div>
+      <div><a href="mailto:${escHtml(m.email)}">${escHtml(m.email)}</a> ${escHtml(m.phone||'')}</div>
+      <p style="white-space:pre-wrap;margin:8px 0;">${escHtml(m.message)}</p>
+      <div class="req-btns"><button class="cancel-btn" onclick="adminDeleteMessage('${m.id}')">Delete</button></div>
+    </div>`).join('');
+  }catch(e){ body.innerHTML = `<p class="rev-msg err">${escHtml(e.message||'Could not load messages.')}</p>`; }
+}
+async function adminDeleteMessage(id){
+  if(!confirm('Delete this message?')) return;
+  try{ await adminCall({action:'delete-message', id}); openMessages(); }catch(e){ alert(e.message||'Could not delete.'); }
 }
 
 /* ---------------- cart ---------------- */
@@ -711,10 +1048,13 @@ function updateCartUI(){
       </div>`).join('');
   }
   const subtotal = cart.reduce((s,i)=>s+i.price,0);
-  const post = cart.length ? cartPostage(subtotal) : 0;
+  const collecting = readDeliveryChoice('cart').collect;
+  const post = cart.length && !collecting ? cartPostage(subtotal) : 0;
   const note = document.getElementById('ppNote');
+  if(!document.getElementById('pc-cart')) renderDeliveryChoice('cartDelivery','cart');
   if(note){
     note.textContent = !cart.length ? 'Free postage on orders of £80 or more'
+      : collecting ? 'Free collection: we\'ll be in touch to arrange it'
       : post === 0 ? 'Postage & packaging: FREE'
       : 'Postage & packaging: £' + post.toFixed(2) + ' (free on orders of £80 or more)';
   }
@@ -782,7 +1122,9 @@ async function buyNow(){
       }
       items.push(spec);
     }
-    const data = await postJSON('/api/checkout', {items});
+    const dl = readDeliveryChoice('cart');
+    if(dl.collect && dl.postcode.replace(/\s/g,'').length < 5) throw new Error('Please enter your postcode for collection.');
+    const data = await postJSON('/api/checkout', {items, collect: dl.collect, postcode: dl.postcode});
     window.location.href = data.url;
     return;
   }catch(e){
@@ -892,8 +1234,10 @@ function showPage(page){
   document.getElementById('page-'+page).classList.add('active');
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.page===page));
   window.scrollTo({top:0, behavior:'instant'});
-  if(page === 'studio'){ renderMockStage(); updateStudioFields(); }
+  if(page === 'studio'){ studioInit(); }
   if(page === 'reviews'){ renderReviews(); }
+  if(page === 'contact'){ renderContact(); }
+  if(history.replaceState) history.replaceState(null, '', page === 'home' ? location.pathname : '#' + page);
 }
 
 /* ---------------- shop data lives on the server ---------------- */
@@ -924,7 +1268,9 @@ function adminLogin(){
 }
 function applyShop(data){
   if(!data || !data.catalogs) return;
-  ['quotes','born','pets'].forEach(k=>{ catalogs[k] = data.catalogs[k] || []; });
+  COLLECTION_KEYS.forEach(k=>{ catalogs[k] = data.catalogs[k] || []; });
+  if(data.settings) shopSettings = Object.assign({}, shopSettings, data.settings);
+  if(Array.isArray(data.occasions) && data.occasions.length) OCCASIONS = data.occasions;
   if(data.prices) Object.assign(prices, data.prices);
   if(Array.isArray(data.giftSets) && data.giftSets.length) giftSets = data.giftSets;
   mugPrices['Standard (11oz)'] = prices.mugSmall;
@@ -939,7 +1285,9 @@ async function loadShop(){
     applyShop(data);
     try{ localStorage.setItem('sca_shop_cache', JSON.stringify(data)); }catch(e){}
   }catch(e){ /* offline or not set up yet: keep what is already showing */ }
-  renderGrids(); renderGiftSets(); renderReviews(); updateStudioFields();
+  renderGrids(); renderGiftSets(); renderReviews();
+  renderDeliveryChoice('cartDelivery','cart'); updateCartUI(); renderContact();
+  if(document.getElementById('page-studio').classList.contains('active')) studioInit();
 }
 
 /* show the last copy of the shop straight away (works offline), then refresh from the server */
@@ -948,14 +1296,23 @@ renderGrids();
 renderGiftSets();
 updateCartUI();
 renderReviews();
-updateStudioFields();
+renderContact();
 setAdminUI();
 loadShop();
+/* open the page named in the address, e.g. scottishcountryattitude.co.uk/#studio */
+(function(){
+  const h = location.hash.replace('#','');
+  if(h && document.getElementById('page-'+h) && !location.search) showPage(h);
+})();
 
 /* coming back from Stripe */
 (function(){
   const q = new URLSearchParams(location.search);
-  if(q.get('paid') === '1'){
+  if(q.get('paid') === '1' && q.get('custom')){
+    document.getElementById('payTitle').textContent = 'Thank you, payment received!';
+    document.getElementById('payText').textContent = 'Your custom order (ref ' + q.get('custom') + ') is paid and is now going to print. Stripe will email your receipt.';
+    document.getElementById('payModal').classList.add('open');
+  } else if(q.get('paid') === '1'){
     cart = []; saveCart(); updateCartUI();
     document.getElementById('payTitle').textContent = 'Thank you — order received!';
     document.getElementById('payText').textContent = 'Your payment went through and your order is with us. We make every item to order, so please allow a little time before it is posted. Stripe will email your receipt.';

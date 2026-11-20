@@ -1,10 +1,10 @@
 /* Scottish Country Attitude service worker.
    Bump VERSION whenever you change any file so installed apps pick it up. */
-const VERSION = 'sca-v8';
+const VERSION = 'sca-v9';
 const SHELL = [
   './', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest',
   'images/born.webp', 'images/pets.webp', 'images/quotes.webp', 'images/emblem.webp',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png', 'pwa.js'
+  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png', 'pwa.js', 'mockup.js'
 ];
 
 self.addEventListener('install', e => {

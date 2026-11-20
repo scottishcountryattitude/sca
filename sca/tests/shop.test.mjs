@@ -94,3 +94,30 @@ test("postage rules", () => {
   assert.equal(postageFor([{ pence: 7999, pieces: 1 }]).postage, 495);
   assert.equal(postageFor([{ pence: 8000, pieces: 1 }]).postage, 0);
 });
+
+/* ---------- new: Sarcastic Quotes, Military, custom requests, collection ---------- */
+import { customItemPrice, milesBetween, COLLECTIONS, GIFT_COLLECTIONS, DEFAULT_CATALOG as DC2, priceLine as pl2, DEFAULT_PRICES as DP2 } from "../netlify/lib/shop.mjs";
+
+test("Sarcastic Quotes (daily) and Military pages can be ordered from and have gift sets", () => {
+  assert.ok(COLLECTIONS.includes("daily") && COLLECTIONS.includes("military"));
+  assert.ok(GIFT_COLLECTIONS.includes("daily") && GIFT_COLLECTIONS.includes("military"));
+  const catalog = { ...structuredClone(DC2), military: [{ id: "m1", name: "Badge", price: 18 }] };
+  const line = pl2({ k: "item", type: "mug", designId: "m1", size: "Large (15oz)" }, { prices: DP2, catalog });
+  assert.equal(line.pence, 1500);
+});
+
+test("custom request items are priced on the server", () => {
+  assert.equal(customItemPrice({ product: "tee", size: "Medium", color: "Navy" }, DP2).pence, 1500);
+  assert.equal(customItemPrice({ product: "hoodie", size: "Large", color: "Grey" }, DP2).pence, 3500);
+  assert.equal(customItemPrice({ product: "cap", color: "Black" }, DP2).pence, 2499);
+  assert.equal(customItemPrice({ product: "mug", size: "Standard (11oz)" }, DP2).pence, 1000);
+  assert.equal(customItemPrice({ product: "bag" }, DP2).pence, 1899);
+  assert.throws(() => customItemPrice({ product: "tee", size: "Medium" }, DP2), /colour/i);
+  assert.throws(() => customItemPrice({ product: "tee", size: "Huge", color: "Navy" }, DP2), /size/i);
+  assert.throws(() => customItemPrice({ product: "cowboy" }, DP2));
+});
+
+test("collection distance", () => {
+  const m = milesBetween({ lat: 56.0, lon: -3.78 }, { lat: 55.86, lon: -4.25 });
+  assert.ok(m > 18 && m < 24, String(m));
+});
