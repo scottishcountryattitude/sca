@@ -373,3 +373,12 @@ body.is-admin #adminBar{display:block;}
   :root:not([data-theme="light"]) .card-desc, :root:not([data-theme="light"]) .hint{color:rgba(239,231,216,0.65);}
 }
 @media(max-width:759px){ .studio-preview h3{display:none;} #cdMobilePreview #mockCanvas{max-width:360px; margin:6px auto 0;} }
+
+/* ---------- Get the app ---------- */
+.app-steps{list-style:none; padding:0; margin:14px 0; display:flex; flex-direction:column; gap:12px;}
+.app-steps li{display:flex; gap:12px; align-items:flex-start; line-height:1.45; font-size:0.95rem;}
+.app-steps li div{flex:1;}
+.app-steps li span{flex:none; width:28px; height:28px; border-radius:50%; background:var(--rust); color:var(--oat);
+  display:flex; align-items:center; justify-content:center; font-weight:700;}
+.app-note{font-size:0.88rem; line-height:1.5;}
+#appModal .btn{margin-top:6px;}

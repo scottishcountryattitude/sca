@@ -1,6 +1,6 @@
 /* Scottish Country Attitude service worker.
    Bump VERSION whenever you change any file so installed apps pick it up. */
-const VERSION = 'sca-v9';
+const VERSION = 'sca-v10';
 const SHELL = [
   './', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest',
   'images/born.webp', 'images/pets.webp', 'images/quotes.webp', 'images/emblem.webp',

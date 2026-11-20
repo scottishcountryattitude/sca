@@ -1,4 +1,4 @@
-/* Registers the service worker and shows a small "install" prompt. */
+/* Registers the service worker, shows a small "install" bar, and powers the "Get the app" buttons. */
 (function () {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -13,41 +13,94 @@
   var KEY = 'sca_install_dismissed';
   var deferred = null;
 
-  var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  var ua = navigator.userAgent;
+  var isIOS = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var isIOSSafari = isIOS && /safari/i.test(ua) && !/crios|fxios|edgios/i.test(ua);
+  var isSamsung = /SamsungBrowser/i.test(ua);
+  var isAndroid = /android/i.test(ua);
+  var isStandalone = function () {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  };
+
+  /* "Get the app" buttons are hidden when the shop is already open as the installed app */
+  function setAppButtons() {
+    var installed = isStandalone();
+    document.querySelectorAll('.get-app').forEach(function (b) { b.style.display = installed ? 'none' : ''; });
+  }
+  setAppButtons();
+
   var dismissed = false;
   try { dismissed = localStorage.getItem(KEY) === '1'; } catch (e) {}
-  if (standalone || dismissed) return;
-
   function dismiss() {
     bar.hidden = true;
     try { localStorage.setItem(KEY, '1'); } catch (e) {}
   }
   close.addEventListener('click', dismiss);
 
-  // Android / desktop Chrome and Edge: real install prompt
+  // Android / desktop Chrome and Edge: the phone's own install prompt
   window.addEventListener('beforeinstallprompt', function (e) {
     e.preventDefault();
     deferred = e;
+    if (dismissed || isStandalone()) return;
     text.textContent = 'Install this app on your phone';
     btn.hidden = false;
     bar.hidden = false;
   });
-  btn.addEventListener('click', function () {
-    if (!deferred) return;
-    deferred.prompt();
-    deferred.userChoice.then(function () { deferred = null; bar.hidden = true; });
+  btn.addEventListener('click', function () { window.getApp(); });
+  window.addEventListener('appinstalled', function () {
+    bar.hidden = true;
+    deferred = null;
+    var m = document.getElementById('appModal');
+    if (m) m.classList.remove('open');
   });
-  window.addEventListener('appinstalled', function () { bar.hidden = true; });
 
-  // iPhone / iPad Safari has no install prompt, so show instructions instead
-  var ua = navigator.userAgent;
-  var isIOS = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  var isSafari = /safari/i.test(ua) && !/crios|fxios|edgios/i.test(ua);
-  if (isIOS && isSafari) {
+  // iPhone / iPad Safari has no install prompt, so the bar shows instructions instead
+  if (isIOSSafari && !dismissed && !isStandalone()) {
     text.textContent = 'To install: tap the Share button, then “Add to Home Screen”.';
     btn.hidden = true;
     setTimeout(function () { bar.hidden = false; }, 2500);
   }
+
+  function step(n, t) { return '<li><span>' + n + '</span><div>' + t + '</div></li>'; }
+
+  /* The "Get the app" button: one-tap install where the phone allows it, otherwise clear steps */
+  window.getApp = function () {
+    if (deferred) {
+      var d = deferred;
+      deferred = null;
+      d.prompt();
+      d.userChoice.then(function (c) { bar.hidden = true; if (c && c.outcome !== 'accepted') deferred = d; }).catch(function () {});
+      return;
+    }
+    var html;
+    if (isIOS && !isIOSSafari) {
+      html = '<p class="app-note">On iPhone and iPad, open this page in <b>Safari</b> first, then:</p><ol class="app-steps">' +
+        step(1, 'Tap the <b>Share</b> button (the square with an arrow pointing up).') +
+        step(2, 'Scroll down and tap <b>Add to Home Screen</b>.') +
+        step(3, 'Tap <b>Add</b>.') + '</ol>';
+    } else if (isIOS) {
+      html = '<ol class="app-steps">' +
+        step(1, 'Tap the <b>Share</b> button (the square with an arrow pointing up) at the bottom or top of Safari.') +
+        step(2, 'Scroll down and tap <b>Add to Home Screen</b>.') +
+        step(3, 'Tap <b>Add</b>. The shop appears on your home screen.') + '</ol>';
+    } else if (isSamsung) {
+      html = '<ol class="app-steps">' +
+        step(1, 'Tap the <b>menu</b> button (three lines, bottom right).') +
+        step(2, 'Tap <b>Add page to</b>, then <b>Home screen</b>.') +
+        step(3, 'Tap <b>Add</b>.') + '</ol>';
+    } else if (isAndroid) {
+      html = '<ol class="app-steps">' +
+        step(1, 'Tap the <b>menu</b> button (three dots, top right).') +
+        step(2, 'Tap <b>Install app</b> or <b>Add to Home screen</b>.') +
+        step(3, 'Tap <b>Install</b> or <b>Add</b>.') + '</ol>' +
+        '<p class="app-note">Best in Chrome. In other browsers, look for "Add to Home screen" in the menu.</p>';
+    } else {
+      html = '<p class="app-note">The app is made for phones. Open <b>scottishcountryattitude.co.uk</b> on your phone and tap <b>Get the app</b>.</p>' +
+        '<p class="app-note">On a computer using Chrome or Edge, you can also click the install icon at the right of the address bar.</p>';
+    }
+    document.getElementById('appSteps').innerHTML = html;
+    document.getElementById('appModal').classList.add('open');
+  };
 })();
 
 /* Compress every customer artwork image before it is sent to /api/upload.

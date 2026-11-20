@@ -45,6 +45,7 @@
     <button data-page="studio" onclick="showPage('studio')">Design Your Own</button>
     <button data-page="reviews" onclick="showPage('reviews')">Reviews</button>
     <button data-page="contact" onclick="showPage('contact')">Contact</button>
+    <button class="get-app" onclick="getApp()">&#128241; Get the app</button>
   </nav>
   <div id="adminBar">
     <div class="admin-inner">
@@ -71,6 +72,7 @@
         <div class="actions">
           <a class="btn primary" onclick="showPage('quotes')">Shop Country Quotes</a>
           <a class="btn ghost" onclick="showPage('studio')">Design your own</a>
+          <a class="btn ghost get-app" onclick="getApp()">&#128241; Get the app</a>
         </div>
       </div>
     </div>
@@ -400,6 +402,17 @@
     <h3>Your order</h3>
     <div id="previewBody"></div>
     <button class="btn primary" onclick="closeOrderPreview()">View basket</button>
+  </div>
+</div>
+
+<!-- GET THE APP: how to install on this phone -->
+<div class="modal" id="appModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-card wide">
+    <button class="drawer-close lb-close" onclick="document.getElementById('appModal').classList.remove('open')" aria-label="Close">&times;</button>
+    <h3>Get the Scottish Country Attitude app</h3>
+    <p>Put the shop on your home screen. It opens like an app, with no app store and nothing to pay.</p>
+    <div id="appSteps"></div>
+    <button class="add-btn" style="width:100%;padding:12px;" onclick="document.getElementById('appModal').classList.remove('open')">Got it</button>
   </div>
 </div>
 
