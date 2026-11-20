@@ -72,6 +72,8 @@ async function savePricePanel(){
   }catch(e){ alert(e.message || 'Prices could not be saved.'); }
 }
 
+/* alt text read by Google and screen readers: the design name, plus its description if there is one */
+function designAlt(p){ return p.desc ? p.name + ' – ' + p.desc : p.name; }
 function productCard(p, collectionKey){
   const safeId = p.id.replace(/'/g,'');
   const safeName = p.name.replace(/'/g,'');
@@ -81,7 +83,7 @@ function productCard(p, collectionKey){
        <button class="del-btn edit-btn" title="Edit name, price and description" onclick="event.stopPropagation();editDesign('${collectionKey}','${safeId}')">✎</button>`
     : '';
   const swatch = p.img
-    ? `<div class="swatch img design" style="background-image:url('${p.img}');cursor:zoom-in;" onclick="openLightbox('${collectionKey||''}','${safeId}')">${delBtn}<span class="tag">Tap to see it bigger</span></div>`
+    ? `<div class="swatch img design" style="cursor:zoom-in;" onclick="openLightbox('${collectionKey||''}','${safeId}')"><img class="design-img" src="${escHtml(p.img)}" alt="${escHtml(designAlt(p))}" loading="lazy" decoding="async">${delBtn}<span class="tag">Tap to see it bigger</span></div>`
     : `<div class="swatch" style="background:${p.color};cursor:pointer;" onclick="onImageClick('${safeId}')">${delBtn}<span class="mark">${p.name}</span><span class="tag">Tap to order</span></div>`;
   return `<div class="card">
     ${swatch}
@@ -279,7 +281,7 @@ function openLightbox(key, id){
   const d = findDesignAnywhere(id);
   if(!d || !d.img) return;
   document.getElementById('lbImg').src = d.img;
-  document.getElementById('lbImg').alt = d.name;
+  document.getElementById('lbImg').alt = designAlt(d);
   document.getElementById('lbName').textContent = d.name;
   document.getElementById('lbDesc').textContent = d.desc || '';
   document.getElementById('lbPrice').textContent = 'from £' + d.price.toFixed(2);
@@ -1229,7 +1231,57 @@ function renderReviews(){
 buildStarInput('starsExperience');
 buildStarInput('starsProduct');
 
-function showPage(page){
+/* ---------------- one web address per page (helps Google) ----------------
+   Must match PAGE_ROUTES in netlify/lib/seo.mjs and the [[redirects]] in netlify.toml. */
+const PAGE_ROUTES = [
+  { page: "home", path: "/" },
+  { page: "quotes", path: "/country-quotes", collection: "quotes" },
+  { page: "borncollection", path: "/born-here-live-here-ride-here", collection: "born" },
+  { page: "pets", path: "/scottish-pets", collection: "pets" },
+  { page: "dailyquotes", path: "/sarcastic-quotes", collection: "daily" },
+  { page: "military", path: "/military", collection: "military" },
+  { page: "studio", path: "/design-your-own" },
+  { page: "reviews", path: "/reviews" },
+  { page: "contact", path: "/contact" },
+];
+const PAGE_META = {
+  home: ["Scottish Country Attitude | Scottish T-shirts, Hoodies, Mugs & Gifts",
+    "Scottish country quotes, biker, pet, sarcastic and military designs on T-shirts, hoodies, caps, mugs and bags. Made to order in Scotland, with gift sets and your own designs."],
+  quotes: ["Country Quote T-shirts, Hoodies & Mugs | Scottish Country Attitude",
+    "Country music and country living quotes on T-shirts, hoodies, caps and mugs. Made to order in Scotland. Gift sets available."],
+  borncollection: ["Born Here, Live Here, Ride Here | Scottish Biker T-shirts & Gifts",
+    "Scottish biker designs on T-shirts, hoodies, caps and mugs. Highland roads, Saltire pride and sport bikes, made to order in Scotland."],
+  pets: ["Scottish Pets Wae Country Attitude | Pet T-shirts, Mugs & Bags",
+    "Sassy Scottish pet designs on T-shirts, hoodies, mugs and bags. Highland coos, Scotties, spaniels and more, made to order."],
+  dailyquotes: ["Sarcastic Quote T-shirts & Mugs | Scottish Country Attitude",
+    "Cheeky Scottish one-liners on T-shirts, hoodies, caps and mugs for folk with attitude. Made to order in Scotland."],
+  military: ["Military & Veteran T-shirts and Mugs | Scottish Country Attitude",
+    "Designs for serving and former soldiers and their families on mugs, T-shirts and hoodies, or upload your own photo. Made to order in Scotland."],
+  studio: ["Design Your Own T-shirt, Hoodie or Mug | Hen & Stag Dos | Scottish Country Attitude",
+    "Custom T-shirts, hoodies, mugs, caps and bags for hen dos, stag dos, parties and gifts. Upload your image, approve a free proof, then pay."],
+  reviews: ["Customer Reviews | Scottish Country Attitude", "What customers say about their Scottish Country Attitude orders."],
+  contact: ["Contact Us | Scottish Country Attitude", "Questions, bulk orders or custom ideas? Get in touch with Scottish Country Attitude."],
+};
+const routeFor = (page) => PAGE_ROUTES.find(r => r.page === page) || PAGE_ROUTES[0];
+function pageFromPath(path){
+  const clean = (path || '/').replace(/\/+$/, '') || '/';
+  const r = PAGE_ROUTES.find(r => r.path === clean);
+  return r ? r.page : null;
+}
+function setMeta(sel, attr, val){ const el = document.querySelector(sel); if(el) el.setAttribute(attr, val); }
+function applyPageMeta(page){
+  const [title, desc] = PAGE_META[page] || PAGE_META.home;
+  const url = 'https://scottishcountryattitude.co.uk' + routeFor(page).path;
+  document.title = title;
+  setMeta('meta[name="description"]', 'content', desc);
+  setMeta('meta[property="og:title"]', 'content', title);
+  setMeta('meta[property="og:description"]', 'content', desc);
+  setMeta('meta[property="og:url"]', 'content', url);
+  setMeta('link[rel="canonical"]', 'href', url);
+}
+
+function showPage(page, opts){
+  if(!document.getElementById('page-'+page)) page = 'home';
   document.querySelectorAll('section.page').forEach(s=>s.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.page===page));
@@ -1237,8 +1289,11 @@ function showPage(page){
   if(page === 'studio'){ studioInit(); }
   if(page === 'reviews'){ renderReviews(); }
   if(page === 'contact'){ renderContact(); }
-  if(history.replaceState) history.replaceState(null, '', page === 'home' ? location.pathname : '#' + page);
+  applyPageMeta(page);
+  const path = routeFor(page).path;
+  if(!(opts && opts.noHistory) && history.pushState && location.pathname !== path) history.pushState({page}, '', path);
 }
+window.addEventListener('popstate', ()=>{ showPage(pageFromPath(location.pathname) || 'home', {noHistory:true}); });
 
 /* ---------------- shop data lives on the server ---------------- */
 let ADMIN_KEY = null;
@@ -1288,6 +1343,7 @@ async function loadShop(){
   renderGrids(); renderGiftSets(); renderReviews();
   renderDeliveryChoice('cartDelivery','cart'); updateCartUI(); renderContact();
   if(document.getElementById('page-studio').classList.contains('active')) studioInit();
+  if(typeof openPendingDesign === 'function') openPendingDesign();
 }
 
 /* show the last copy of the shop straight away (works offline), then refresh from the server */
@@ -1299,11 +1355,32 @@ renderReviews();
 renderContact();
 setAdminUI();
 loadShop();
-/* open the page named in the address, e.g. scottishcountryattitude.co.uk/#studio */
+/* open the page named in the address, e.g. scottishcountryattitude.co.uk/design-your-own
+   (old links like /#studio still work and are moved to the new address) */
 (function(){
   const h = location.hash.replace('#','');
-  if(h && document.getElementById('page-'+h) && !location.search) showPage(h);
+  if(h && document.getElementById('page-'+h)){
+    history.replaceState(null, '', routeFor(h).path + location.search);
+    showPage(h, {noHistory:true});
+  } else {
+    showPage(pageFromPath(location.pathname) || 'home', {noHistory:true});
+  }
 })();
+
+/* a link to one design, e.g. /country-quotes?design=q123 (used by Google Shopping and for sharing) */
+let pendingDesign = new URLSearchParams(location.search).get('design');
+function openPendingDesign(){
+  if(!pendingDesign) return;
+  for(const r of PAGE_ROUTES){
+    if(r.collection && (catalogs[r.collection]||[]).some(d=>d.id===pendingDesign)){
+      showPage(r.page, {noHistory:true});
+      openLightbox(r.collection, pendingDesign);
+      pendingDesign = null;
+      return;
+    }
+  }
+}
+openPendingDesign();
 
 /* coming back from Stripe */
 (function(){

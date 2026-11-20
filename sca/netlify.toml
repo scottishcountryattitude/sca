@@ -19,3 +19,46 @@
   [headers.values]
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Each page has its own web address (good for Google). They all load the same page,
+# and app.js shows the right section. Must match PAGE_ROUTES in public/app.js.
+[[redirects]]
+  from = "/country-quotes"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/born-here-live-here-ride-here"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/scottish-pets"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/sarcastic-quotes"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/military"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/design-your-own"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/reviews"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/contact"
+  to = "/index.html"
+  status = 200
+

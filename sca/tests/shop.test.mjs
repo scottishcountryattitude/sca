@@ -121,3 +121,37 @@ test("collection distance", () => {
   const m = milesBetween({ lat: 56.0, lon: -3.78 }, { lat: 55.86, lon: -4.25 });
   assert.ok(m > 18 && m < 24, String(m));
 });
+
+/* ---------- Google set-up ---------- */
+import { PAGE_ROUTES, sitemapXml, feedXml } from "../netlify/lib/seo.mjs";
+import { POSTAGE } from "../netlify/lib/shop.mjs";
+
+test("page addresses match the website and the Netlify redirects", () => {
+  const src = fs.readFileSync("public/app.js", "utf8");
+  const site = eval(/const PAGE_ROUTES = (\[[\s\S]*?\n\]);/.exec(src)[1]);
+  assert.deepEqual(site, PAGE_ROUTES);
+  const html = fs.readFileSync("public/index.html", "utf8");
+  const toml = fs.readFileSync("netlify.toml", "utf8");
+  for (const r of PAGE_ROUTES) {
+    assert.ok(html.includes(`id="page-${r.page}"`), r.page + " section exists");
+    if (r.path !== "/") assert.ok(toml.includes(`from = "${r.path}"`), r.path + " redirect exists");
+  }
+});
+
+const sample = { ...DEFAULT_CATALOG, quotes: [{ id: "q1", name: "Boots & Beer", desc: "Cowboy boots", price: 15, img: "/api/img/q1" }] };
+
+test("sitemap lists every page and the design images", () => {
+  const xml = sitemapXml(sample, "2026-12-02");
+  for (const r of PAGE_ROUTES) assert.ok(xml.includes(`<loc>https://scottishcountryattitude.co.uk${r.path}</loc>`));
+  assert.ok(xml.includes("<image:loc>https://scottishcountryattitude.co.uk/api/img/q1</image:loc>"));
+});
+
+test("merchant feed lists each design as tee, hoodie, mug and cap at the real prices", () => {
+  const xml = feedXml(sample, DEFAULT_PRICES, POSTAGE);
+  assert.equal((xml.match(/<item>/g) || []).length, 4);
+  assert.ok(xml.includes("<g:id>q1-tee</g:id>") && xml.includes(`<g:price>${DEFAULT_PRICES.teeImaged.toFixed(2)} GBP</g:price>`));
+  assert.ok(xml.includes(`<g:price>${DEFAULT_PRICES.hoodieImaged.toFixed(2)} GBP</g:price>`));
+  assert.ok(xml.includes("<title>Boots &amp; Beer T-shirt</title>"));
+  assert.ok(xml.includes("<link>https://scottishcountryattitude.co.uk/country-quotes?design=q1</link>"));
+  assert.ok(!xml.includes("p1-tee"), "designs without an image are left out");
+});

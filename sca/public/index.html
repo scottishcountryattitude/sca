@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Scottish Country Attitude</title>
+<title>Scottish Country Attitude | Scottish T-shirts, Hoodies, Mugs &amp; Gifts</title>
+<link rel="canonical" href="https://scottishcountryattitude.co.uk/">
 <meta name="theme-color" content="#17231d">
 <meta name="description" content="Scottish Country Attitude: Scottish country quotes, sarcastic quotes, pets, military and custom T-shirts, hoodies, caps, mugs and bags, made to order in Scotland.">
 <meta property="og:title" content="Scottish Country Attitude">
@@ -11,9 +12,9 @@
 <meta property="og:image" content="https://scottishcountryattitude.co.uk/images/born.webp">
 <meta property="og:url" content="https://scottishcountryattitude.co.uk/">
 <meta property="og:type" content="website">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Country Attitude">
@@ -21,7 +22,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"OnlineStore","name":"Scottish Country Attitude",
+ "url":"https://scottishcountryattitude.co.uk/","logo":"https://scottishcountryattitude.co.uk/icons/icon-512.png",
+ "image":"https://scottishcountryattitude.co.uk/images/born.webp","email":"scottishcountryattitude@outlook.com",
+ "description":"Scottish country quotes, biker, pet, sarcastic and military designs on T-shirts, hoodies, caps, mugs and bags, made to order in Scotland.",
+ "areaServed":"GB","currenciesAccepted":"GBP"}
+</script>
+<link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 
@@ -283,7 +291,7 @@
         <input type="text" id="ctWebsite" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
         <button class="add-btn" style="width:100%;padding:12px;" onclick="sendContact()">Send message</button>
         <div class="rev-msg" id="ctMsg"></div>
-        <p class="hint">Got a photo ready? Use <a href="#" onclick="startStudio('studio');return false;">Design Your Own</a> to upload it and see it on your item.</p>
+        <p class="hint">Got a photo ready? Use <a href="/design-your-own" onclick="startStudio('studio');return false;">Design Your Own</a> to upload it and see it on your item.</p>
       </div>
     </div>
   </section>
@@ -333,7 +341,17 @@
 
 </main>
 
-<footer>Scottish Country Attitude — made to order, printed after payment clears. <a href="#" onclick="showPage('contact');return false;">Contact</a> · <a href="#" id="adminLink" onclick="adminLogin();return false;">Admin</a></footer>
+<footer>
+  <nav class="foot-links" aria-label="Shop pages">
+    <a href="/country-quotes" onclick="showPage('quotes');return false;">Country Quotes</a> ·
+    <a href="/born-here-live-here-ride-here" onclick="showPage('borncollection');return false;">Born Here Live Here Ride Here</a> ·
+    <a href="/scottish-pets" onclick="showPage('pets');return false;">Scottish Pets</a> ·
+    <a href="/sarcastic-quotes" onclick="showPage('dailyquotes');return false;">Sarcastic Quotes</a> ·
+    <a href="/military" onclick="showPage('military');return false;">Military</a> ·
+    <a href="/design-your-own" onclick="showPage('studio');return false;">Design Your Own</a> ·
+    <a href="/reviews" onclick="showPage('reviews');return false;">Reviews</a>
+  </nav>
+  Scottish Country Attitude — made to order, printed after payment clears. <a href="/contact" onclick="showPage('contact');return false;">Contact</a> · <a href="#" id="adminLink" onclick="adminLogin();return false;">Admin</a></footer>
 
 <!-- CART DRAWER -->
 <div class="overlay" id="overlay" onclick="closeCart()"></div>
@@ -437,14 +455,14 @@
   </div>
 </div>
 
-<script src="mockup.js"></script>
-<script src="app.js"></script>
+<script src="/mockup.js"></script>
+<script src="/app.js"></script>
 <div id="installBar" hidden>
   <span id="installText">Install this app on your phone</span>
   <button id="installBtn" type="button">Install</button>
   <button id="installClose" type="button" aria-label="Dismiss">&times;</button>
 </div>
-<script src="pwa.js"></script>
+<script src="/pwa.js"></script>
 
 </body>
 </html>

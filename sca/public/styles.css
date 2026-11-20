@@ -382,3 +382,7 @@ body.is-admin #adminBar{display:block;}
   display:flex; align-items:center; justify-content:center; font-weight:700;}
 .app-note{font-size:0.88rem; line-height:1.5;}
 #appModal .btn{margin-top:6px;}
+
+/* design pictures are real <img> tags (so Google Images can read them), shown like before */
+.swatch.img.design img.design-img{position:absolute; inset:0; width:100%; height:100%; object-fit:contain;}
+footer .foot-links{display:block; margin-bottom:8px; line-height:1.9;}

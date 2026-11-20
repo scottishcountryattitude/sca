@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/admin
+Disallow: /api/upload/
+
+Sitemap: https://scottishcountryattitude.co.uk/sitemap.xml
