@@ -31,8 +31,11 @@ self.addEventListener('fetch', e => {
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req).then(res => {
-        const copy = res.clone();
-        caches.open(VERSION).then(c => c.put('index.html', copy));
+        // only the shop page itself is kept for offline use (not the Wee Cabmate policy pages)
+        if (!url.pathname.startsWith('/wee-cabmate')) {
+          const copy = res.clone();
+          caches.open(VERSION).then(c => c.put('index.html', copy));
+        }
         return res;
       }).catch(() => caches.match('index.html'))
     );
