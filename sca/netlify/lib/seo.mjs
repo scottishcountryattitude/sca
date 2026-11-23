@@ -13,6 +13,7 @@ export const PAGE_ROUTES = [
   { page: "pets", path: "/scottish-pets", collection: "pets" },
   { page: "dailyquotes", path: "/sarcastic-quotes", collection: "daily" },
   { page: "military", path: "/military", collection: "military" },
+  { page: "ufo", path: "/ufo", collection: "ufo" },
   { page: "studio", path: "/design-your-own" },
   { page: "reviews", path: "/reviews" },
   { page: "contact", path: "/contact" },
@@ -20,7 +21,7 @@ export const PAGE_ROUTES = [
 
 const COLLECTION_LABEL = {
   quotes: "Country Quotes", born: "Born Here Live Here Ride Here", pets: "Scottish Pets Wae Country Attitude",
-  daily: "Sarcastic Quotes", military: "Military",
+  daily: "Sarcastic Quotes", military: "Military", ufo: "UFO & UAP",
 };
 
 export const esc = (s) => String(s ?? "").replace(/[<>&'"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" }[c]));
