@@ -22,6 +22,7 @@ export const DEFAULT_CATALOG = {
   quotes: [],
   daily: [],
   military: [],
+  ufo: [],
   born: [{ id: "b5", name: "Ride Here Bag", price: 15.99, color: "var(--moss)" }],
   pets: [
     { id: "p1", name: "Sassy Scottie", price: 18.99, color: "var(--heather)" },
@@ -36,8 +37,8 @@ export const COLOURS = ["White", "Grey", "Navy", "Black"];
    A gift set is a list of pieces (2 to 5 of: mug, bag, cap, tee, hoodie), all in one design from one page.
    The list below is the standard list; the owner can change it from Admin > "Edit gift sets"
    and the changed list is saved on the server. Names are always built from the pieces. */
-export const COLLECTIONS = ["quotes", "born", "pets", "daily", "military"];
-export const GIFT_COLLECTIONS = ["quotes", "born", "pets", "daily", "military"];
+export const COLLECTIONS = ["quotes", "born", "pets", "daily", "military", "ufo"];
+export const GIFT_COLLECTIONS = ["quotes", "born", "pets", "daily", "military", "ufo"];
 export const GIFT_PIECES = ["mug", "bag", "cap", "tee", "hoodie"]; // this is also the order names are written in
 const GIFT_NAME_LABEL = { mug: "Mug", bag: "Bag", cap: "Cap", tee: "T-shirt", hoodie: "Hoodie" };
 export function giftSetName(pieces) {

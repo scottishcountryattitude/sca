@@ -48,6 +48,11 @@
   status = 200
 
 [[redirects]]
+  from = "/ufo"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
   from = "/design-your-own"
   to = "/index.html"
   status = 200

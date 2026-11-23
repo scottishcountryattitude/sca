@@ -254,6 +254,7 @@
   #card-pets{background-image:url('images/pets.webp');}
   #card-quotes{background-image:url('images/quotes.webp');}
   #card-gift{background-image:url('images/emblem.webp');}
+  #card-ufo{background-image:url('images/ufo-card.svg');}
   #gift-emblem{background-image:url('images/emblem.webp'); background-size:contain; background-repeat:no-repeat; background-position:center; background-color:#fff;}
 
   /* ---------- reviews ---------- */

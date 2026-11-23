@@ -11,8 +11,9 @@ const defaultProducts = {
   ],
   daily: [],
   military: [],
+  ufo: [],
 };
-const COLLECTION_KEYS = ['quotes','born','pets','daily','military'];
+const COLLECTION_KEYS = ['quotes','born','pets','daily','military','ufo'];
 const catalogs = {};
 COLLECTION_KEYS.forEach(key=>{ catalogs[key] = defaultProducts[key].slice(); });
 let shopSettings = {town:'', collectionMiles:10, collectionOn:false, email:'scottishcountryattitude@outlook.com', complaintsEmail:'scottishcountryattitude@gmail.com', whatsapp:''};
@@ -269,6 +270,7 @@ function renderGrids(){
   grid('petsGrid','pets','New designs coming soon.');
   grid('dailyGrid','daily','New sarcastic quotes coming soon.');
   grid('militaryGrid','military','New military designs coming soon. Got your own photo or artwork? Upload it below.');
+  grid('ufoGrid','ufo','New UFO designs coming soon.');
   renderPetsBag();
 }
 
@@ -447,7 +449,7 @@ function addDesign(collectionKey, evt){
    then a combination, then one of THAT page's designs, then the size / colour for each piece.
    The standard list below must match the server (tests/shop.test.mjs checks it). The owner can change the
    list from Admin > "Edit gift sets"; the changed list comes from the server in applyShop(). */
-const GIFT_PAGES = ['quotes','born','pets','daily','military'];
+const GIFT_PAGES = ['quotes','born','pets','daily','military','ufo'];
 const GIFT_ORDER = ['mug','bag','cap','tee','hoodie'];
 const giftPieceLabel = p => ({mug:'Mug', bag:'Bag', cap:'Cap', tee:'T-Shirt', hoodie:'Hoodie'})[p];
 const giftNameLabel = p => ({mug:'Mug', bag:'Bag', cap:'Cap', tee:'T-shirt', hoodie:'Hoodie'})[p];
@@ -476,7 +478,7 @@ const defaultGiftSets = [
 ];
 let giftSets = defaultGiftSets.map(g=>({id:g.id, pieces:g.pieces.slice()}));
 /* what each page's box is currently showing: {count, setId, design, pieces:{mug:{...}, ...}} */
-const giftUI = {quotes:{}, born:{}, pets:{}, daily:{}, military:{}};
+const giftUI = {quotes:{}, born:{}, pets:{}, daily:{}, military:{}, ufo:{}};
 const GIFT_COUNT_LABELS = {2:'2 item gift set', 3:'3 item gift set', 4:'4 item gift set', 5:'5 item gift set (full set)'};
 
 function currentGiftSet(key){
@@ -1240,6 +1242,7 @@ const PAGE_ROUTES = [
   { page: "pets", path: "/scottish-pets", collection: "pets" },
   { page: "dailyquotes", path: "/sarcastic-quotes", collection: "daily" },
   { page: "military", path: "/military", collection: "military" },
+  { page: "ufo", path: "/ufo", collection: "ufo" },
   { page: "studio", path: "/design-your-own" },
   { page: "reviews", path: "/reviews" },
   { page: "contact", path: "/contact" },
@@ -1257,6 +1260,8 @@ const PAGE_META = {
     "Cheeky Scottish one-liners on T-shirts, hoodies, caps and mugs for folk with attitude. Made to order in Scotland."],
   military: ["Military & Veteran T-shirts and Mugs | Scottish Country Attitude",
     "Designs for serving and former soldiers and their families on mugs, T-shirts and hoodies, or upload your own photo. Made to order in Scotland."],
+  ufo: ["UFO & UAP T-shirts, Hoodies and Mugs | Scottish Country Attitude",
+    "Flying saucers, strange lights and UAP designs on T-shirts, hoodies, caps, mugs and bags for sky watchers. Made to order in Scotland."],
   studio: ["Design Your Own T-shirt, Hoodie or Mug | Hen & Stag Dos | Scottish Country Attitude",
     "Custom T-shirts, hoodies, mugs, caps and bags for hen dos, stag dos, parties and gifts. Upload your image, approve a free proof, then pay."],
   reviews: ["Customer Reviews | Scottish Country Attitude", "What customers say about their Scottish Country Attitude orders."],

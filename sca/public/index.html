@@ -50,6 +50,7 @@
     <button data-page="pets" onclick="showPage('pets')">Scottish Pets Wae Country Attitude</button>
     <button data-page="dailyquotes" onclick="showPage('dailyquotes')">Sarcastic Quotes</button>
     <button data-page="military" onclick="showPage('military')">Military</button>
+    <button data-page="ufo" onclick="showPage('ufo')">UFO &amp; UAP</button>
     <button data-page="studio" onclick="showPage('studio')">Design Your Own</button>
     <button data-page="reviews" onclick="showPage('reviews')">Reviews</button>
     <button data-page="contact" onclick="showPage('contact')">Contact</button>
@@ -111,6 +112,10 @@
       <div class="card" onclick="showPage('military')" style="cursor:pointer">
         <div class="swatch img" id="card-military"><span class="tag">Collection</span></div>
         <div class="card-body"><h3>Military</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">For serving and former squaddies. Mugs or the full set.</p></div>
+      </div>
+      <div class="card" onclick="showPage('ufo')" style="cursor:pointer">
+        <div class="swatch img" id="card-ufo"><span class="tag">Collection</span></div>
+        <div class="card-body"><h3>UFO &amp; UAP</h3><p style="font-size:0.85rem;color:rgba(23,35,29,0.6)">For sky watchers. Flying saucers, strange lights and things that can't be explained.</p></div>
       </div>
       <div class="card" onclick="showPage('studio')" style="cursor:pointer">
         <div class="swatch img" id="card-studio"><span class="tag">Your design</span></div>
@@ -207,6 +212,22 @@
       <div><h2>Upload your own</h2><p>Got a photo or your own artwork you'd like on a mug, T-shirt, hoodie, cap or bag? Upload it, see it on the item, and we'll email you a proof to approve before you pay.</p></div>
     </div>
     <button class="add-btn" style="padding:12px 18px;" onclick="startStudio('military')">Upload your own image</button>
+  </section>
+
+  <!-- UFO & UAP -->
+  <section class="page" id="page-ufo">
+    <div class="section-head" style="margin-top:26px;">
+      <div><h2>UFO &amp; UAP</h2><p>For sky watchers and believers. Flying saucers, strange lights and things that can't be explained. Tap a design to see it bigger, then order it on a T-shirt, hoodie, cap or mug.</p></div>
+    </div>
+    <div class="admin-strip">
+      <span>Admin: add a new UFO design</span>
+      <label class="add-btn" style="cursor:pointer;">
+        Upload design
+        <input type="file" accept="image/*" style="display:none" onchange="addDesign('ufo', event)">
+      </label>
+    </div>
+    <div class="giftset giftbox" id="giftBox-ufo"></div>
+    <div class="grid" id="ufoGrid"></div>
   </section>
 
   <!-- STUDIO -->
@@ -348,6 +369,7 @@
     <a href="/scottish-pets" onclick="showPage('pets');return false;">Scottish Pets</a> ·
     <a href="/sarcastic-quotes" onclick="showPage('dailyquotes');return false;">Sarcastic Quotes</a> ·
     <a href="/military" onclick="showPage('military');return false;">Military</a> ·
+    <a href="/ufo" onclick="showPage('ufo');return false;">UFO &amp; UAP</a> ·
     <a href="/design-your-own" onclick="showPage('studio');return false;">Design Your Own</a> ·
     <a href="/reviews" onclick="showPage('reviews');return false;">Reviews</a>
   </nav>
